@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head}">
+  <meta charset="utf-8">
+  <title>compare</title>
+  <link rel="stylesheet" href="../../static/css/base.css">
+  <link rel="stylesheet" id="theme-css" href="../../static/css/themes/midnight-brass.css">
+  <script defer src="../../static/vendor/highlight/highlight.min.js"></script>
+  <script defer src="../../static/js/slide.js"></script>
+</head>
+<body class="scene scene--compare" data-index="7" data-total="10"
+      th:attr="data-index=${index},data-total=${total}">
+
+<header class="chrome" th:replace="~{layout :: chrome}">
+  <div class="progress" data-progress></div>
+  <div class="chrome-row"><span class="track-chip">React</span><span class="topic-id">R-08</span></div>
+</header>
+
+<main class="stage">
+  <h1 class="h-title" th:replace="~{layout :: heading}"><span class="pill">useState</span> <span>hay useReducer?</span></h1>
+
+  <div class="cmp">
+    <section class="cmp-col card kind-neutral anim-in" style="--order:1"
+             th:attr="class=${'cmp-col card anim-in kind-' + (scene.left.kind ?: 'neutral')}">
+      <div class="cmp-head"><i class="dot"></i><h3 class="cmp-title" data-fit="left-heading" th:text="${scene.left.heading}">useState</h3></div>
+      <ul class="cmp-items">
+        <li data-fit="left-item" th:each="it : ${scene.left.items}" th:text="${it}">State đơn lẻ, độc lập</li>
+        <li th:remove="all">Bật tắt modal, input</li>
+        <li th:remove="all">Ít logic cập nhật</li>
+      </ul>
+    </section>
+
+    <span class="vs" aria-hidden="true">vs</span>
+
+    <section class="cmp-col card kind-good anim-in" style="--order:2"
+             th:attr="class=${'cmp-col card anim-in kind-' + (scene.right.kind ?: 'neutral')}">
+      <div class="cmp-head"><i class="dot"></i><h3 class="cmp-title" data-fit="right-heading" th:text="${scene.right.heading}">useReducer</h3></div>
+      <ul class="cmp-items">
+        <li data-fit="right-item" th:each="it : ${scene.right.items}" th:text="${it}">Nhiều state đổi cùng lúc</li>
+        <li th:remove="all">Form có submit và lỗi</li>
+        <li th:remove="all">Reducer pure, dễ test</li>
+      </ul>
+    </section>
+  </div>
+
+  <aside class="note note--info anim-in" style="--order:3" th:if="${scene.note != null}">
+    <span class="note-label">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+      <span>Ghi nhớ</span>
+    </span>
+    <p class="note-text" data-fit="note" th:text="${scene.note}">Hiệu năng như nhau, khác ở cách tổ chức logic</p>
+  </aside>
+</main>
+
+</body>
+</html>

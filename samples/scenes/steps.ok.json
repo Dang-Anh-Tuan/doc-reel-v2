@@ -1,0 +1,21 @@
+{
+  "video": {
+    "topicId": "R-08",
+    "track": "React",
+    "title": "Rules of Hooks & useReducer",
+    "theme": "midnight-brass"
+  },
+  "scene": {
+    "id": "s04-steps",
+    "type": "steps",
+    "accent": "React",
+    "titleRest": "nhớ Hook thế nào?",
+    "steps": [
+      "Render 1: gọi Hook theo thứ tự 0, 1, 2",
+      "React lưu state vào ô 0, 1, 2",
+      "Render 2: gọi lại đúng thứ tự đó",
+      "Mỗi Hook lấy đúng ô của mình"
+    ],
+    "narration": "React không biết tên biến. Nó lưu state theo thứ tự gọi Hook, và lần render sau lấy lại đúng theo thứ tự đó."
+  }
+}

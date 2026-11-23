@@ -1,0 +1,10 @@
+/* Theme: teal-navy-copper — chỉ khai báo biến, base.css dùng lại. */
+:root {
+  --bg: #162C35;
+  --card: #1F3B47;
+  --primary: #C88B6E;
+  --secondary: #6FA8A0;
+  --accent: #E2C07A;
+  --text: #ECE6DA;
+  --muted: #8EA5AC;
+}

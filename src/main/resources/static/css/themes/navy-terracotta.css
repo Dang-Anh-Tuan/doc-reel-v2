@@ -1,0 +1,10 @@
+/* Theme: navy-terracotta — chỉ khai báo biến, base.css dùng lại. */
+:root {
+  --bg: #1A2535;
+  --card: #243247;
+  --primary: #C47A57;
+  --secondary: #6FA8A0;
+  --accent: #E0C27A;
+  --text: #F0E8DC;
+  --muted: #94A2B5;
+}

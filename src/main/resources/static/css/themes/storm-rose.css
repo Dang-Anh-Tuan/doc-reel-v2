@@ -1,0 +1,10 @@
+/* Theme: storm-rose — chỉ khai báo biến, base.css dùng lại. */
+:root {
+  --bg: #232A3D;
+  --card: #2E364D;
+  --primary: #D49A9A;
+  --secondary: #A3B18A;
+  --accent: #D8B26A;
+  --text: #EFE9E6;
+  --muted: #9CA3B6;
+}

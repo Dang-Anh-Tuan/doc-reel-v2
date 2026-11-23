@@ -1,0 +1,17 @@
+{
+  "video": {
+    "topicId": "R-08",
+    "track": "React",
+    "title": "Rules of Hooks & useReducer",
+    "theme": "midnight-brass"
+  },
+  "scene": {
+    "id": "s01-title",
+    "type": "title",
+    "chip": "Ôn bài 60 giây",
+    "accent": "Rules",
+    "titleRest": "of Hooks",
+    "hook": "Vì sao Hook không được nằm trong if?",
+    "narration": "Vì sao Hook không được đặt trong câu lệnh if? Câu trả lời nằm ở cách React ghi nhớ Hook."
+  }
+}

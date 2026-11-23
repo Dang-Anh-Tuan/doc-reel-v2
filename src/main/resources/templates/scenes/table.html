@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head}">
+  <meta charset="utf-8">
+  <title>table</title>
+  <link rel="stylesheet" href="../../static/css/base.css">
+  <link rel="stylesheet" id="theme-css" href="../../static/css/themes/midnight-brass.css">
+  <script defer src="../../static/vendor/highlight/highlight.min.js"></script>
+  <script defer src="../../static/js/slide.js"></script>
+</head>
+<body class="scene scene--table" data-index="8" data-total="10"
+      th:attr="data-index=${index},data-total=${total}">
+
+<header class="chrome" th:replace="~{layout :: chrome}">
+  <div class="progress" data-progress></div>
+  <div class="chrome-row"><span class="track-chip">React</span><span class="topic-id">R-08</span></div>
+</header>
+
+<main class="stage">
+  <h1 class="h-title" th:replace="~{layout :: heading}"><span class="pill">So sánh</span> <span>nhanh</span></h1>
+
+  <div class="tbl-card card anim-in" style="--order:1">
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th th:each="c : ${scene.columns}"><div class="cell" data-fit="header" th:text="${c}">Tiêu chí</div></th>
+          <th th:remove="all"><div class="cell">useState</div></th>
+          <th th:remove="all"><div class="cell">useReducer</div></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr th:each="r : ${scene.rows}">
+          <td th:each="cell : ${r}"><div class="cell" data-fit="cell" th:text="${cell}">Độ phức tạp</div></td>
+          <td th:remove="all"><div class="cell">Thấp</div></td>
+          <td th:remove="all"><div class="cell">Trung bình</div></td>
+        </tr>
+        <tr th:remove="all">
+          <td><div class="cell">Logic cập nhật</div></td><td><div class="cell">Rải rác</div></td><td><div class="cell">Gom về reducer</div></td>
+        </tr>
+        <tr th:remove="all">
+          <td><div class="cell">Test riêng</div></td><td><div class="cell">Khó</div></td><td><div class="cell">Dễ</div></td>
+        </tr>
+        <tr th:remove="all">
+          <td><div class="cell">Hàm cập nhật</div></td><td><div class="cell">Ổn định</div></td><td><div class="cell">Ổn định</div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+</body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "video": {
+    "topicId": "R-08",
+    "track": "React",
+    "title": "Rules of Hooks & useReducer",
+    "theme": "midnight-brass"
+  },
+  "scene": {
+    "id": "s04-steps",
+    "type": "steps",
+    "accent": "React",
+    "titleRest": "nhớ Hook thế nào? — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này",
+    "steps": [
+      "Render 1: gọi Hook theo thứ tự 0, 1, 2 — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này",
+      "React lưu state vào ô 0, 1, 2 — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này",
+      "Render 2: gọi lại đúng thứ tự đó — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này",
+      "Mỗi Hook lấy đúng ô của mình — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này",
+      "Bước thêm 1",
+      "Bước thêm 2"
+    ],
+    "narration": "React không biết tên biến. Nó lưu state theo thứ tự gọi Hook, và lần render sau lấy lại đúng theo thứ tự đó."
+  }
+}

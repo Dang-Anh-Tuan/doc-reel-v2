@@ -1,0 +1,52 @@
+{
+  "video": {
+    "topicId": "R-08",
+    "track": "React",
+    "title": "Rules of Hooks & useReducer",
+    "theme": "midnight-brass"
+  },
+  "scene": {
+    "id": "s08-table",
+    "type": "table",
+    "accent": "So sánh",
+    "titleRest": "nhanh — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này",
+    "columns": [
+      "Tiêu chí",
+      "useState",
+      "useReducer"
+    ],
+    "rows": [
+      [
+        "Độ phức tạp — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này",
+        "Thấp — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này",
+        "Trung bình — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này"
+      ],
+      [
+        "Logic cập nhật — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này",
+        "Rải rác — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này",
+        "Gom về reducer — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này"
+      ],
+      [
+        "Test riêng — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này",
+        "Khó — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này",
+        "Dễ — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này"
+      ],
+      [
+        "Hàm cập nhật — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này",
+        "Ổn định — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này",
+        "Ổn định — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này"
+      ],
+      [
+        "Hàng 5",
+        "x",
+        "y"
+      ],
+      [
+        "Hàng 6",
+        "x",
+        "y"
+      ]
+    ],
+    "narration": "Tóm lại, useReducer gom logic về một chỗ và dễ test hơn. Cả setState và dispatch đều có reference ổn định."
+  }
+}

@@ -1,0 +1,10 @@
+/* Theme: slate-mustard — chỉ khai báo biến, base.css dùng lại. */
+:root {
+  --bg: #222B36;
+  --card: #2C3744;
+  --primary: #C9A94E;
+  --secondary: #8EA8B5;
+  --accent: #B86F52;
+  --text: #ECE7DA;
+  --muted: #98A3AF;
+}

@@ -1,0 +1,10 @@
+/* Theme: midnight-brass — chỉ khai báo biến, base.css dùng lại. */
+:root {
+  --bg: #1B2433;
+  --card: #243044;
+  --primary: #C9A66B;
+  --secondary: #B86F52;
+  --accent: #8FA68E;
+  --text: #EDE6D8;
+  --muted: #94A0B2;
+}

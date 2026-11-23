@@ -1,0 +1,161 @@
+.workspace {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) 380px;
+  height: 100%;
+  min-height: 0;
+}
+
+/* ---------- danh sách ---------- */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 8px;
+  overflow: auto;
+  border-right: 1px solid var(--border);
+}
+.listItem {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+.listItem:hover {
+  background: var(--surface);
+}
+.listItem[aria-current="true"] {
+  border-color: var(--border);
+  background: var(--surface-2);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+/* ---------- khung xem ---------- */
+.viewer {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 40%, #1a1f27, var(--bg) 70%);
+}
+
+/* ---------- cột phải ---------- */
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  padding: 12px;
+  overflow: auto;
+  border-left: 1px solid var(--border);
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.meta {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 12px 0 0;
+  font-size: 12px;
+}
+.meta dt {
+  color: var(--text-muted);
+}
+.meta dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.issues {
+  margin-top: 12px;
+  padding: 8px 10px;
+  border: 1px solid;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+}
+.issues[data-tone="bad"] {
+  color: var(--bad);
+  border-color: color-mix(in srgb, var(--bad) 45%, transparent);
+}
+.issues[data-tone="warn"] {
+  color: var(--warn);
+  border-color: color-mix(in srgb, var(--warn) 45%, transparent);
+}
+.issues ul,
+.issues p {
+  margin: 4px 0 0;
+  padding-left: 16px;
+}
+.issues p {
+  padding-left: 0;
+}
+
+/* ---------- JSON editor ---------- */
+.editorPanel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 320px;
+}
+.editorBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+.textarea {
+  flex: 1;
+  min-height: 260px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre;
+  resize: vertical;
+}
+.textarea[aria-invalid="true"] {
+  border-color: var(--bad);
+}
+.editorError {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--bad);
+}
+.hint {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+@media (max-width: 1100px) {
+  .workspace {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 70vh auto;
+    overflow: auto;
+  }
+  .list {
+    flex-direction: row;
+    overflow-x: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .listItem {
+    flex: none;
+    width: auto;
+  }
+  .side {
+    border-left: 0;
+  }
+}

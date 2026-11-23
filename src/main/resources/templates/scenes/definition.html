@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head}">
+  <meta charset="utf-8">
+  <title>definition</title>
+  <link rel="stylesheet" href="../../static/css/base.css">
+  <link rel="stylesheet" id="theme-css" href="../../static/css/themes/midnight-brass.css">
+  <script defer src="../../static/vendor/highlight/highlight.min.js"></script>
+  <script defer src="../../static/js/slide.js"></script>
+</head>
+<body class="scene scene--definition" data-index="2" data-total="10"
+      th:attr="data-index=${index},data-total=${total}">
+
+<header class="chrome" th:replace="~{layout :: chrome}">
+  <div class="progress" data-progress></div>
+  <div class="chrome-row"><span class="track-chip">React</span><span class="topic-id">R-08</span></div>
+</header>
+
+<main class="stage stage--def">
+  <div class="kicker anim-in" style="--order:0">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h14v15H6a2 2 0 0 0-2 2 2 2 0 0 0 2 2h14"/><path d="M8 7h8M8 11h5"/></svg>
+    <span>Thuật ngữ</span>
+  </div>
+  <div>
+    <h1 class="term anim-in" style="--order:1" data-fit="term" data-shrink="72" th:text="${scene.term}">Hook</h1>
+    <p class="expansion anim-in" style="--order:2" data-fit="expansion" th:if="${scene.expansion != null}" th:text="${scene.expansion}">use* function</p>
+  </div>
+  <div class="def-card card anim-in" style="--order:3">
+    <p class="def-text" data-fit="definition" th:text="${scene.definition}">Hàm bắt đầu bằng use, cho component dùng state và các tính năng khác của React.</p>
+  </div>
+  <div class="example anim-in" style="--order:4" th:if="${scene.example != null}">
+    <span class="ex-label">Ví dụ</span>
+    <p class="ex-code" data-fit="example" th:text="${scene.example}">const [n, setN] = useState(0)</p>
+  </div>
+</main>
+
+</body>
+</html>

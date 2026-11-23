@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head}">
+  <meta charset="utf-8">
+  <title>points</title>
+  <link rel="stylesheet" href="../../static/css/base.css">
+  <link rel="stylesheet" id="theme-css" href="../../static/css/themes/midnight-brass.css">
+  <script defer src="../../static/vendor/highlight/highlight.min.js"></script>
+  <script defer src="../../static/js/slide.js"></script>
+</head>
+<body class="scene scene--points" data-index="3" data-total="10"
+      th:attr="data-index=${index},data-total=${total}">
+
+<header class="chrome" th:replace="~{layout :: chrome}">
+  <div class="progress" data-progress></div>
+  <div class="chrome-row"><span class="track-chip">React</span><span class="topic-id">R-08</span></div>
+</header>
+
+<main class="stage">
+  <h1 class="h-title" th:replace="~{layout :: heading}"><span class="pill">2 luật</span> <span>của Hooks</span></h1>
+
+  <ol class="points">
+    <li class="point card anim-in" style="--order:1"
+        th:each="p, st : ${scene.points}" th:attr="style=${'--order:' + st.count}">
+      <span class="num" th:text="${st.count < 10 ? '0' + st.count : st.count}">01</span>
+      <div class="point-body">
+        <h3 class="point-head" data-fit="point-heading" th:text="${p.heading}">Chỉ gọi ở top level</h3>
+        <p class="point-detail" data-fit="point-detail" th:text="${p.detail}">Không đặt trong if, vòng lặp hay sau return sớm</p>
+      </div>
+    </li>
+    <li class="point card anim-in" style="--order:2" th:remove="all">
+      <span class="num">02</span>
+      <div class="point-body">
+        <h3 class="point-head">Chỉ gọi trong React</h3>
+        <p class="point-detail">Trong component hoặc custom Hook, không trong hàm thường</p>
+      </div>
+    </li>
+  </ol>
+</main>
+
+</body>
+</html>

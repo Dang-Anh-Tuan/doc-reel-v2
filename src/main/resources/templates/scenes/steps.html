@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head}">
+  <meta charset="utf-8">
+  <title>steps</title>
+  <link rel="stylesheet" href="../../static/css/base.css">
+  <link rel="stylesheet" id="theme-css" href="../../static/css/themes/midnight-brass.css">
+  <script defer src="../../static/vendor/highlight/highlight.min.js"></script>
+  <script defer src="../../static/js/slide.js"></script>
+</head>
+<body class="scene scene--steps" data-index="4" data-total="10"
+      th:attr="data-index=${index},data-total=${total}">
+
+<header class="chrome" th:replace="~{layout :: chrome}">
+  <div class="progress" data-progress></div>
+  <div class="chrome-row"><span class="track-chip">React</span><span class="topic-id">R-08</span></div>
+</header>
+
+<main class="stage">
+  <h1 class="h-title" th:replace="~{layout :: heading}"><span class="pill">React</span> <span>nhớ Hook thế nào?</span></h1>
+
+  <ol class="steps">
+    <li class="step anim-in" style="--order:1"
+        th:each="s, st : ${scene.steps}"
+        th:classappend="${st.last} ? 'is-last' : ''"
+        th:attr="style=${'--order:' + st.count}">
+      <span class="step-no" th:text="${st.count}">1</span>
+      <div class="step-card card"><p class="step-text" data-fit="step" th:text="${s}">Render 1: gọi Hook theo thứ tự 0, 1, 2</p></div>
+    </li>
+    <li class="step anim-in" style="--order:2" th:remove="all">
+      <span class="step-no">2</span>
+      <div class="step-card card"><p class="step-text">React lưu state vào ô 0, 1, 2</p></div>
+    </li>
+    <li class="step anim-in" style="--order:3" th:remove="all">
+      <span class="step-no">3</span>
+      <div class="step-card card"><p class="step-text">Render 2: gọi lại đúng thứ tự đó</p></div>
+    </li>
+    <li class="step is-last anim-in" style="--order:4" th:remove="all">
+      <span class="step-no">4</span>
+      <div class="step-card card"><p class="step-text">Mỗi Hook lấy đúng ô của mình</p></div>
+    </li>
+  </ol>
+</main>
+
+</body>
+</html>

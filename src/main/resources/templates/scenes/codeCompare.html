@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head}">
+  <meta charset="utf-8">
+  <title>codeCompare</title>
+  <link rel="stylesheet" href="../../static/css/base.css">
+  <link rel="stylesheet" id="theme-css" href="../../static/css/themes/midnight-brass.css">
+  <script defer src="../../static/vendor/highlight/highlight.min.js"></script>
+  <script defer src="../../static/js/slide.js"></script>
+</head>
+<body class="scene scene--codeCompare" data-index="6" data-total="10"
+      th:attr="data-index=${index},data-total=${total}">
+
+<header class="chrome" th:replace="~{layout :: chrome}">
+  <div class="progress" data-progress></div>
+  <div class="chrome-row"><span class="track-chip">React</span><span class="topic-id">R-08</span></div>
+</header>
+
+<main class="stage stage--code" style="gap:44px">
+  <h1 class="h-title" th:replace="~{layout :: heading}"><span class="pill">Sửa</span> <span>thế nào?</span></h1>
+
+  <div class="cc-stack">
+    <section class="cc-block card anim-in" style="--order:1">
+      <div class="cc-head">
+        <span class="cc-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></span>
+        <span class="cc-label" data-fit="bad-label" th:text="${scene.bad.label}">Hook trong if</span>
+      </div>
+      <pre class="code" data-code data-fit="bad-code" data-max-lines="5" data-lang="tsx"
+           th:attr="data-lang=${scene.lang}"><code th:text="${scene.bad.code}">if (open) {
+  useEffect(() =&gt; sub(), []);
+}</code></pre>
+    </section>
+
+    <div class="cc-arrow anim-in" style="--order:2" aria-hidden="true">
+      <svg viewBox="0 0 40 64" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 4v54M8 44l12 14 12-14"/></svg>
+    </div>
+
+    <section class="cc-block is-good card anim-in" style="--order:3">
+      <div class="cc-head">
+        <span class="cc-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17l9-10"/></svg></span>
+        <span class="cc-label" data-fit="good-label" th:text="${scene.good.label}">Điều kiện trong Hook</span>
+      </div>
+      <pre class="code" data-code data-fit="good-code" data-max-lines="5" data-lang="tsx"
+           th:attr="data-lang=${scene.lang}"><code th:text="${scene.good.code}">useEffect(() =&gt; {
+  if (open) sub();
+}, [open]);</code></pre>
+    </section>
+  </div>
+
+  <aside class="note note--good anim-in" style="--order:4" th:if="${scene.note != null}">
+    <span class="note-label">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.4 10.9c.6.4.9 1 .9 1.7V16h5v-.4c0-.7.3-1.3.9-1.7A6 6 0 0 0 12 3z"/></svg>
+      <span>Cách sửa</span>
+    </span>
+    <p class="note-text" data-fit="note" th:text="${scene.note}">Đưa điều kiện vào bên trong Hook</p>
+  </aside>
+</main>
+
+</body>
+</html>

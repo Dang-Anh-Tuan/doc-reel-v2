@@ -1,0 +1,22 @@
+{
+  "video": {
+    "topicId": "R-08",
+    "track": "React",
+    "title": "Rules of Hooks & useReducer",
+    "theme": "midnight-brass"
+  },
+  "scene": {
+    "id": "s10-summary",
+    "type": "summary",
+    "accent": "Chốt",
+    "titleRest": "trong 10 giây",
+    "bullets": [
+      "Hook luôn ở top level",
+      "Điều kiện đặt bên trong Hook",
+      "Return sớm đặt sau Hook",
+      "Bật eslint-plugin-react-hooks"
+    ],
+    "outro": "Vì sao Hook phải gọi cùng thứ tự?",
+    "narration": "Nhớ bốn điều này. Và thử tự trả lời: vì sao Hook phải gọi cùng thứ tự?"
+  }
+}

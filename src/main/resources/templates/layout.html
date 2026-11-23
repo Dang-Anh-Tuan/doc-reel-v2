@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<!--
+  Fragment dùng chung cho mọi scene (templates/scenes/*.html).
+  Model: video {topicId, track, title, theme}, scene, index, total, frame.
+  Chỉ dùng th:text / th:each / th:if / th:classappend / th:attr (+ th:href/th:src cho link, th:replace cho fragment).
+-->
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1080">
+  <title th:text="${video.title}">DocReel</title>
+  <link rel="stylesheet" href="../static/css/base.css" th:href="@{/css/base.css}">
+  <link rel="stylesheet" id="theme-css" href="../static/css/themes/midnight-brass.css"
+        th:href="@{/css/themes/{t}.css(t=${video.theme ?: 'midnight-brass'})}">
+  <script defer src="../static/vendor/highlight/highlight.min.js" th:src="@{/vendor/highlight/highlight.min.js}"></script>
+  <script defer src="../static/js/slide.js" th:src="@{/js/slide.js}"></script>
+</head>
+<body>
+
+<!-- Thanh tiến độ (slide.js vẽ vạch) + chip track + topicId -->
+<header class="chrome" th:fragment="chrome">
+  <div class="progress" data-progress></div>
+  <div class="chrome-row">
+    <span class="track-chip" th:text="${video.track}">React</span>
+    <span class="topic-id" th:text="${video.topicId}">R-08</span>
+  </div>
+</header>
+
+<!-- Tiêu đề chung: accent trong pill + titleRest, tối đa 2 dòng -->
+<h1 class="h-title anim-in" style="--order:0" data-fit="title" th:fragment="heading"><span class="pill" th:if="${scene.accent != null}" th:text="${scene.accent}">Return sớm</span> <span th:text="${scene.titleRest}">trước Hook</span></h1>
+
+</body>
+</html>

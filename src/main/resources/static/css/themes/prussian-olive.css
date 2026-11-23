@@ -1,0 +1,10 @@
+/* Theme: prussian-olive — chỉ khai báo biến, base.css dùng lại. */
+:root {
+  --bg: #1C2A3A;
+  --card: #26374B;
+  --primary: #A3B18A;
+  --secondary: #C9A66B;
+  --accent: #C6735B;
+  --text: #EEE8DA;
+  --muted: #93A2B3;
+}

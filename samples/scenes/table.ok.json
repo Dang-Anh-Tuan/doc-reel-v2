@@ -1,0 +1,42 @@
+{
+  "video": {
+    "topicId": "R-08",
+    "track": "React",
+    "title": "Rules of Hooks & useReducer",
+    "theme": "midnight-brass"
+  },
+  "scene": {
+    "id": "s08-table",
+    "type": "table",
+    "accent": "So sánh",
+    "titleRest": "nhanh",
+    "columns": [
+      "Tiêu chí",
+      "useState",
+      "useReducer"
+    ],
+    "rows": [
+      [
+        "Độ phức tạp",
+        "Thấp",
+        "Trung bình"
+      ],
+      [
+        "Logic cập nhật",
+        "Rải rác",
+        "Gom về reducer"
+      ],
+      [
+        "Test riêng",
+        "Khó",
+        "Dễ"
+      ],
+      [
+        "Hàm cập nhật",
+        "Ổn định",
+        "Ổn định"
+      ]
+    ],
+    "narration": "Tóm lại, useReducer gom logic về một chỗ và dễ test hơn. Cả setState và dispatch đều có reference ổn định."
+  }
+}

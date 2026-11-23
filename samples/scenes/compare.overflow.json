@@ -1,0 +1,38 @@
+{
+  "video": {
+    "topicId": "R-08",
+    "track": "React",
+    "title": "Rules of Hooks & useReducer",
+    "theme": "midnight-brass"
+  },
+  "scene": {
+    "id": "s07-compare",
+    "type": "compare",
+    "accent": "useState",
+    "titleRest": "hay useReducer? — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này",
+    "left": {
+      "heading": "useState",
+      "kind": "neutral",
+      "items": [
+        "State đơn lẻ, độc lập — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này",
+        "Bật tắt modal, input — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này",
+        "Ít logic cập nhật — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này",
+        "Mục thứ tư",
+        "Mục thứ năm"
+      ]
+    },
+    "right": {
+      "heading": "useReducer",
+      "kind": "good",
+      "items": [
+        "Nhiều state đổi cùng lúc — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này",
+        "Form có submit và lỗi — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này",
+        "Reducer pure, dễ test — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này",
+        "Mục thứ tư",
+        "Mục thứ năm"
+      ]
+    },
+    "note": "Hiệu năng như nhau, khác ở cách tổ chức logic",
+    "narration": "State đơn giản thì dùng useState. Nhiều state đổi cùng lúc theo nghiệp vụ thì dùng useReducer."
+  }
+}

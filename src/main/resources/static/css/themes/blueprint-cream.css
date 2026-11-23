@@ -1,0 +1,10 @@
+/* Theme: blueprint-cream — chỉ khai báo biến, base.css dùng lại. */
+:root {
+  --bg: #1A3150;
+  --card: #22406A;
+  --primary: #EAD9B0;
+  --secondary: #7FB2D9;
+  --accent: #D98E6A;
+  --text: #F2EEE4;
+  --muted: #A0B4CC;
+}

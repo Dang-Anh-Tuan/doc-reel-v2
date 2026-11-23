@@ -1,0 +1,34 @@
+{
+  "video": {
+    "topicId": "R-08",
+    "track": "React",
+    "title": "Rules of Hooks & useReducer",
+    "theme": "midnight-brass"
+  },
+  "scene": {
+    "id": "s07-compare",
+    "type": "compare",
+    "accent": "useState",
+    "titleRest": "hay useReducer?",
+    "left": {
+      "heading": "useState",
+      "kind": "neutral",
+      "items": [
+        "State đơn lẻ, độc lập",
+        "Bật tắt modal, input",
+        "Ít logic cập nhật"
+      ]
+    },
+    "right": {
+      "heading": "useReducer",
+      "kind": "good",
+      "items": [
+        "Nhiều state đổi cùng lúc",
+        "Form có submit và lỗi",
+        "Reducer pure, dễ test"
+      ]
+    },
+    "note": "Hiệu năng như nhau, khác ở cách tổ chức logic",
+    "narration": "State đơn giản thì dùng useState. Nhiều state đổi cùng lúc theo nghiệp vụ thì dùng useReducer."
+  }
+}

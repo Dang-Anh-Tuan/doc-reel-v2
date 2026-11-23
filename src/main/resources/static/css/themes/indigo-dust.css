@@ -1,0 +1,10 @@
+/* Theme: indigo-dust — chỉ khai báo biến, base.css dùng lại. */
+:root {
+  --bg: #1E2140;
+  --card: #282C52;
+  --primary: #A99BC9;
+  --secondary: #D9A0A0;
+  --accent: #E2C07A;
+  --text: #ECE8F2;
+  --muted: #9A9BB8;
+}

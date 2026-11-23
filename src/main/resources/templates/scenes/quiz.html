@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head}">
+  <meta charset="utf-8">
+  <title>quiz</title>
+  <link rel="stylesheet" href="../../static/css/base.css">
+  <link rel="stylesheet" id="theme-css" href="../../static/css/themes/midnight-brass.css">
+  <script defer src="../../static/vendor/highlight/highlight.min.js"></script>
+  <script defer src="../../static/js/slide.js"></script>
+</head>
+<!-- 2 frame: ?frame=1 câu hỏi, ?frame=2 lộ đáp án (cùng bố cục, không xê dịch) -->
+<body class="scene scene--quiz" data-index="9" data-total="10" data-frames="2" data-frame="1"
+      th:attr="data-index=${index},data-total=${total},data-frame=${frame}">
+
+<header class="chrome" th:replace="~{layout :: chrome}">
+  <div class="progress" data-progress></div>
+  <div class="chrome-row"><span class="track-chip">React</span><span class="topic-id">R-08</span></div>
+</header>
+
+<main class="stage stage--quiz">
+  <div class="kicker quiz-kicker anim-in" style="--order:0">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.4c-.6.3-1 .9-1 1.5v.6M12 17h.01"/></svg>
+    <span>Câu hỏi phỏng vấn</span>
+  </div>
+
+  <h1 class="question anim-in" style="--order:1" data-fit="question" th:text="${scene.question}">Vì sao Hook phải được gọi cùng thứ tự ở mọi lần render?</h1>
+
+  <ol class="options">
+    <li class="opt card anim-in" style="--order:2"
+        th:each="o, st : ${scene.options}"
+        th:classappend="${st.index == scene.answer} ? 'is-answer' : ''"
+        th:attr="style=${'--order:' + (st.count + 1)}">
+      <span class="opt-letter" th:text="${'ABCD'.charAt(st.index)}">A</span>
+      <span class="opt-text" data-fit="option" th:text="${o}">Để code dễ đọc hơn</span>
+      <svg class="opt-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17l9-10"/></svg>
+    </li>
+    <li class="opt card is-answer anim-in" style="--order:3" th:remove="all">
+      <span class="opt-letter">B</span><span class="opt-text">React lưu state theo thứ tự</span>
+      <svg class="opt-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17l9-10"/></svg>
+    </li>
+    <li class="opt card anim-in" style="--order:4" th:remove="all">
+      <span class="opt-letter">C</span><span class="opt-text">Để chạy nhanh hơn</span>
+    </li>
+    <li class="opt card anim-in" style="--order:5" th:remove="all">
+      <span class="opt-letter">D</span><span class="opt-text">Do TypeScript yêu cầu</span>
+    </li>
+  </ol>
+
+  <aside class="explain note note--good anim-in" style="--order:6">
+    <span class="note-label">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17l9-10"/></svg>
+      <span th:text="${'Đáp án ' + 'ABCD'.charAt(scene.answer)}">Đáp án B</span>
+    </span>
+    <p class="note-text" data-fit="explain" th:text="${scene.explain}">React gắn state vào từng Hook theo thứ tự gọi, không theo tên biến.</p>
+  </aside>
+</main>
+
+</body>
+</html>

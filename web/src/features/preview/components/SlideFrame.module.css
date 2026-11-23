@@ -1,0 +1,63 @@
+.frame {
+  position: relative;
+  flex: none;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #000;
+  box-shadow: 0 0 0 1px var(--border), var(--shadow);
+}
+
+.iframe {
+  position: absolute;
+  inset: 0 auto auto 0;
+  border: 0;
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+
+.error {
+  margin: 0;
+  padding: 12px;
+  color: var(--bad);
+  font-size: 12px;
+}
+
+.safe {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: repeating-linear-gradient(135deg, rgba(120, 170, 255, 0.15) 0 6px, transparent 6px 12px);
+}
+.bandBottom {
+  background: repeating-linear-gradient(135deg, rgba(255, 110, 90, 0.17) 0 6px, transparent 6px 12px);
+}
+.band span {
+  position: absolute;
+  left: 6px;
+  bottom: 3px;
+  font-size: 10px;
+  color: #fff;
+  opacity: 0.85;
+  text-shadow: 0 1px 2px #000;
+}
+.bandBottom span {
+  top: 3px;
+  bottom: auto;
+}
+.hLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px dashed rgba(255, 255, 255, 0.55);
+}
+.vLine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 1px dashed rgba(255, 255, 255, 0.3);
+}

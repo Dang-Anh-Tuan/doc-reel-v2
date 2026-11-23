@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head}">
+  <meta charset="utf-8">
+  <title>summary</title>
+  <link rel="stylesheet" href="../../static/css/base.css">
+  <link rel="stylesheet" id="theme-css" href="../../static/css/themes/midnight-brass.css">
+  <script defer src="../../static/vendor/highlight/highlight.min.js"></script>
+  <script defer src="../../static/js/slide.js"></script>
+</head>
+<body class="scene scene--summary" data-index="10" data-total="10"
+      th:attr="data-index=${index},data-total=${total}">
+
+<header class="chrome" th:replace="~{layout :: chrome}">
+  <div class="progress" data-progress></div>
+  <div class="chrome-row"><span class="track-chip">React</span><span class="topic-id">R-08</span></div>
+</header>
+
+<main class="stage">
+  <h1 class="h-title" th:replace="~{layout :: heading}"><span class="pill">Chốt</span> <span>trong 10 giây</span></h1>
+
+  <ul class="checklist card anim-in" style="--order:1">
+    <li th:each="b : ${scene.bullets}">
+      <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17l9-10"/></svg></span>
+      <span class="bullet" data-fit="bullet" th:text="${b}">Hook luôn ở top level</span>
+    </li>
+    <li th:remove="all"><span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17l9-10"/></svg></span><span class="bullet">Điều kiện đặt bên trong Hook</span></li>
+    <li th:remove="all"><span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17l9-10"/></svg></span><span class="bullet">Return sớm đặt sau Hook</span></li>
+    <li th:remove="all"><span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17l9-10"/></svg></span><span class="bullet">Bật eslint-plugin-react-hooks</span></li>
+  </ul>
+
+  <p class="outro anim-in" style="--order:2" th:if="${scene.outro != null}"><span class="outro-text" data-fit="outro" th:text="${scene.outro}">Vì sao Hook phải gọi cùng thứ tự?</span></p>
+</main>
+
+</body>
+</html>

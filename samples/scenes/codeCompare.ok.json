@@ -1,0 +1,25 @@
+{
+  "video": {
+    "topicId": "R-08",
+    "track": "React",
+    "title": "Rules of Hooks & useReducer",
+    "theme": "midnight-brass"
+  },
+  "scene": {
+    "id": "s06-code-compare",
+    "type": "codeCompare",
+    "accent": "Sửa",
+    "titleRest": "thế nào?",
+    "lang": "tsx",
+    "bad": {
+      "label": "Hook trong if",
+      "code": "if (open) {\n  useEffect(() => sub(), []);\n}"
+    },
+    "good": {
+      "label": "Điều kiện trong Hook",
+      "code": "useEffect(() => {\n  if (open) sub();\n}, [open]);"
+    },
+    "note": "Đưa điều kiện vào bên trong Hook",
+    "narration": "Cách sửa: đừng bọc Hook bằng điều kiện. Hãy đưa điều kiện vào bên trong Hook."
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "video": {
+    "topicId": "R-08",
+    "track": "React",
+    "title": "Rules of Hooks & useReducer",
+    "theme": "midnight-brass"
+  },
+  "scene": {
+    "id": "s10-summary",
+    "type": "summary",
+    "accent": "Chốt",
+    "titleRest": "trong 10 giây — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này",
+    "bullets": [
+      "Hook luôn ở top level — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này",
+      "Điều kiện đặt bên trong Hook — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này",
+      "Return sớm đặt sau Hook — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này",
+      "Bật eslint-plugin-react-hooks — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này",
+      "Bullet thứ năm",
+      "Bullet thứ sáu"
+    ],
+    "outro": "Vì sao Hook phải gọi cùng thứ tự?",
+    "narration": "Nhớ bốn điều này. Và thử tự trả lời: vì sao Hook phải gọi cùng thứ tự?"
+  }
+}

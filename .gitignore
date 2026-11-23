@@ -1,0 +1,24 @@
+# Bản build của web/ (npm run build) — sinh ra, không commit
+src/main/resources/static/admin/
+
+# Java / IDE
+target/
+build/
+.idea/
+*.iml
+.vscode/
+
+# Thư mục chạy job
+inbox/
+work/
+done/
+failed/
+duplicate/
+requests/
+
+# Bí mật
+.env
+*.local
+
+# Worktree của agent
+.claude/worktrees/

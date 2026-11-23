@@ -1,0 +1,189 @@
+{
+  "topicId": "TEST-01",
+  "track": "Edge cases",
+  "title": "Max-limit test",
+  "version": 1,
+  "videoType": "SLIDES",
+  "theme": "blueprint-cream",
+  "sources": [
+    "https://example.com/docs"
+  ],
+  "scenes": [
+    {
+      "id": "t01-title",
+      "type": "title",
+      "chip": "Kiểm thử giới hạn",
+      "accent": "Tràn",
+      "titleRest": "chữ ở mức tối đa Kiểm t",
+      "hook": "Hook dài đúng 60 ký tự <script>&amp;\"' Kiểm thử độ dài chữ t",
+      "narration": "Kiểm thử slide tiêu đề."
+    },
+    {
+      "id": "t02-points",
+      "type": "points",
+      "accent": "Ba",
+      "titleRest": "ý dài nhất có thể Kiểm th",
+      "points": [
+        {
+          "heading": "Tiêu đề ý số Kiểm thử độ",
+          "detail": "Chi tiết dài đúng bảy mươi ký tự Kiểm thử độ dài chữ tiếng Việt có dấu"
+        },
+        {
+          "heading": "Tiêu đề ý số Kiểm thử độ",
+          "detail": "Chi tiết dài đúng bảy mươi ký tự Kiểm thử độ dài chữ tiếng Việt có dấu"
+        },
+        {
+          "heading": "Tiêu đề ý số Kiểm thử độ",
+          "detail": "Chi tiết dài đúng bảy mươi ký tự Kiểm thử độ dài chữ tiếng Việt có dấu"
+        }
+      ],
+      "narration": "Kiểm thử ba ý."
+    },
+    {
+      "id": "t03-code",
+      "type": "code",
+      "accent": "Code",
+      "titleRest": "tám dòng bốn mươi Kiểm.",
+      "file": "VeryLongFileName.tsx",
+      "lang": "tsx",
+      "code": "const html = `<div class=\"a\">&amp;</div>\nfunction useVeryLongCustomHookName() {\n  const [value, setValue] = useState(0);\n  useSyncExternalStore(sub, get, getSrv)\n  if (value > 1000) console.warn('quá!')\n  return { value, setValue } as const ;\n} // dòng 7: ký tự đặc biệt <>&\"'`{}[]\nexport default useVeryLongCustomHookName",
+      "highlight": [
+        1,
+        4,
+        8
+      ],
+      "note": "Ghi chú dài đúng bảy mươi ký tự Kiểm thử độ dài chữ tiếng Việt có dấu:",
+      "narration": "Kiểm thử code.",
+      "noteKind": "tip"
+    },
+    {
+      "id": "t04-code-compare",
+      "type": "codeCompare",
+      "accent": "Sai",
+      "titleRest": "và đúng tối đa Kiểm thử.",
+      "lang": "tsx",
+      "bad": {
+        "label": "Phiên bản sai",
+        "code": "const html = `<div class=\"a\">&amp;</div>\nfunction useVeryLongCustomHookName() {\n  const [value, setValue] = useState(0);\n  useSyncExternalStore(sub, get, getSrv)\n  if (value > 1000) console.warn('quá!')"
+      },
+      "good": {
+        "label": "Phiên bản đúng",
+        "code": "function useVeryLongCustomHookName() {\n  const [value, setValue] = useState(0);\n  useSyncExternalStore(sub, get, getSrv)\n  if (value > 1000) console.warn('quá!')\n  return { value, setValue } as const ;"
+      },
+      "note": "Ghi chú dài đúng bảy mươi ký tự Kiểm thử độ dài chữ tiếng Việt có dấu:",
+      "narration": "Kiểm thử so sánh code."
+    },
+    {
+      "id": "t05-compare",
+      "type": "compare",
+      "accent": "Trái",
+      "titleRest": "vs phải tối đa Kiểm thử",
+      "left": {
+        "heading": "Cột trái",
+        "kind": "bad",
+        "items": [
+          "Mục dài đúng ba mươi Kiểm thử.",
+          "Mục dài đúng ba mươi Kiểm thử.",
+          "Mục dài đúng ba mươi Kiểm thử."
+        ]
+      },
+      "right": {
+        "heading": "Cột phải",
+        "kind": "good",
+        "items": [
+          "Mục dài đúng ba mươi Kiểm thử.",
+          "Mục dài đúng ba mươi Kiểm thử.",
+          "Mục dài đúng ba mươi Kiểm thử."
+        ]
+      },
+      "note": "Ghi chú so sánh Kiểm thử độ dài chữ tiếng Việt có dấu: ẫ ặ ữ ỡ ượ ằ ẳ.",
+      "narration": "Kiểm thử so sánh."
+    },
+    {
+      "id": "t06-definition",
+      "type": "definition",
+      "term": "useSyncExternalStore",
+      "expansion": "Hook đồng bộ store ngoài",
+      "definition": "Định nghĩa dài đúng một trăm hai mươi ký tự <b>&</b> Kiểm thử độ dài chữ tiếng Việt có dấu: ẫ ặ ữ ỡ ượ ằ ẳ Kiểm thử độ d",
+      "example": "useSyncExternalStore(subscribe, getSnapshot) Kiểm thử độ dài",
+      "narration": "Kiểm thử định nghĩa."
+    },
+    {
+      "id": "t07-steps",
+      "type": "steps",
+      "accent": "Năm",
+      "titleRest": "bước dài nhất Kiểm thử đ",
+      "steps": [
+        "Bước 1: nội dung dài đúng bốn mươi Kiểm.",
+        "Bước 2: nội dung dài đúng bốn mươi Kiểm.",
+        "Bước 3: nội dung dài đúng bốn mươi Kiểm.",
+        "Bước 4: nội dung dài đúng bốn mươi Kiểm.",
+        "Bước 5: nội dung dài đúng bốn mươi Kiểm."
+      ],
+      "narration": "Kiểm thử năm bước."
+    },
+    {
+      "id": "t08-table",
+      "type": "table",
+      "accent": "Bảng",
+      "titleRest": "ba cột bốn hàng Kiểm th",
+      "columns": [
+        "Cột tiêu đề Kiểm t",
+        "Cột tiêu đề Kiểm t",
+        "Cột tiêu đề Kiểm t"
+      ],
+      "rows": [
+        [
+          "Ô dài mười tám Kiể",
+          "Ô dài mười tám Kiể",
+          "Ô dài mười tám Kiể"
+        ],
+        [
+          "Ô dài mười tám Kiể",
+          "Ô dài mười tám Kiể",
+          "Ô dài mười tám Kiể"
+        ],
+        [
+          "Ô dài mười tám Kiể",
+          "Ô dài mười tám Kiể",
+          "Ô dài mười tám Kiể"
+        ],
+        [
+          "Ô dài mười tám Kiể",
+          "Ô dài mười tám Kiể",
+          "Ô dài mười tám Kiể"
+        ]
+      ],
+      "narration": "Kiểm thử bảng."
+    },
+    {
+      "id": "t09-quiz",
+      "type": "quiz",
+      "question": "Câu hỏi phỏng vấn dài đúng tám mươi ký tự có dấu & <tag> Kiểm thử độ dài chữ tiế",
+      "options": [
+        "Lựa chọn A dài ba mươi Kiểm th",
+        "Lựa chọn B dài ba mươi Kiểm th",
+        "Lựa chọn C dài ba mươi Kiểm th",
+        "Lựa chọn D dài ba mươi Kiểm th"
+      ],
+      "narration": "Câu hỏi kiểm thử.",
+      "answer": 3,
+      "explain": "Giải thích dài đúng tám mươi ký tự Kiểm thử độ dài chữ tiếng Việt có dấu: ẫ ặ ữ.",
+      "revealNarration": "Đáp án D."
+    },
+    {
+      "id": "t10-summary",
+      "type": "summary",
+      "accent": "Chốt",
+      "titleRest": "bốn ý dài nhất Kiểm thử",
+      "bullets": [
+        "Ý tóm tắt số 1 dài đúng bốn mươi Kiểm th",
+        "Ý tóm tắt số 2 dài đúng bốn mươi Kiểm th",
+        "Ý tóm tắt số 3 dài đúng bốn mươi Kiểm th",
+        "Ý tóm tắt số 4 dài đúng bốn mươi Kiểm th"
+      ],
+      "outro": "Câu outro kiểm thử Kiểm thử độ dài chữ tiếng Việt có dấu: ẫ.",
+      "narration": "Kiểm thử tóm tắt."
+    }
+  ]
+}

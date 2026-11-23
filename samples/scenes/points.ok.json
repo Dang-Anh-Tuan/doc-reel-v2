@@ -1,0 +1,25 @@
+{
+  "video": {
+    "topicId": "R-08",
+    "track": "React",
+    "title": "Rules of Hooks & useReducer",
+    "theme": "midnight-brass"
+  },
+  "scene": {
+    "id": "s03-points",
+    "type": "points",
+    "accent": "2 luật",
+    "titleRest": "của Hooks",
+    "points": [
+      {
+        "heading": "Chỉ gọi ở top level",
+        "detail": "Không đặt trong if, vòng lặp hay sau return sớm"
+      },
+      {
+        "heading": "Chỉ gọi trong React",
+        "detail": "Trong component hoặc custom Hook, không trong hàm thường"
+      }
+    ],
+    "narration": "Chỉ có hai luật. Một: chỉ gọi Hook ở top level. Hai: chỉ gọi Hook trong component hoặc custom Hook."
+  }
+}

@@ -1,0 +1,119 @@
+.shell {
+  display: grid;
+  grid-template-columns: var(--nav-width) minmax(0, 1fr);
+  height: 100%;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 16px 12px;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px;
+  font-weight: 700;
+  font-size: 15px;
+}
+.brand small {
+  margin-left: 6px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+.logo {
+  width: 14px;
+  height: 24px;
+  border-radius: 3px;
+  background: linear-gradient(var(--accent), #b86f52);
+  box-shadow: 0 0 18px -4px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+.links {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  text-decoration: none;
+}
+.link:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.active {
+  background: var(--surface-3);
+  color: var(--text);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.tag {
+  margin-left: auto;
+  padding: 0 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  font-size: 11px;
+  font-style: normal;
+  color: var(--text-faint);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  padding: 0 8px;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+.env {
+  padding: 0 6px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: var(--surface-3);
+  color: var(--text-muted);
+}
+.env[data-env="dev"] {
+  background: color-mix(in srgb, var(--warn) 18%, transparent);
+  color: var(--warn);
+}
+
+.main {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+
+@media (max-width: 800px) {
+  .shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+  .nav {
+    flex-direction: row;
+    align-items: center;
+    padding: 8px 12px;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .links {
+    flex-direction: row;
+  }
+  .footer {
+    display: none;
+  }
+}

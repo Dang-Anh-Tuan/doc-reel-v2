@@ -1,0 +1,24 @@
+{
+  "video": {
+    "topicId": "R-08",
+    "track": "React",
+    "title": "Rules of Hooks & useReducer",
+    "theme": "midnight-brass"
+  },
+  "scene": {
+    "id": "s05-code",
+    "type": "code",
+    "accent": "Return sớm",
+    "titleRest": "trước Hook — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này",
+    "file": "Profile.tsx",
+    "lang": "tsx",
+    "code": "function Profile({ user }) { // thêm chữ cho dòng dài quá bốn mươi ký tự\n  if (!user) return null; // thêm chữ cho dòng dài quá bốn mươi ký tự\n  const [tab, setTab] = // thêm chữ cho dòng dài quá bốn mươi ký tự\n    useState('info'); // thêm chữ cho dòng dài quá bốn mươi ký tự\n  return <Tabs value={tab} />; // thêm chữ cho dòng dài quá bốn mươi ký tự\n} // thêm chữ cho dòng dài quá bốn mươi ký tự\nfunction Profile({ user }) { // thêm chữ cho dòng dài quá bốn mươi ký tự\n  if (!user) return null; // thêm chữ cho dòng dài quá bốn mươi ký tự\n  const [tab, setTab] = // thêm chữ cho dòng dài quá bốn mươi ký tự\n    useState('info'); // thêm chữ cho dòng dài quá bốn mươi ký tự\n  return <Tabs value={tab} />; // thêm chữ cho dòng dài quá bốn mươi ký tự\n} // thêm chữ cho dòng dài quá bốn mươi ký tự",
+    "highlight": [
+      2,
+      3
+    ],
+    "note": "Lần đầu 0 Hook, lần sau 1 Hook: React báo lỗi",
+    "narration": "Đoạn này nhìn vô hại, nhưng return sớm nằm trước Hook. Khi user đổi từ null sang có giá trị, số Hook thay đổi và React báo lỗi.",
+    "noteKind": "warn"
+  }
+}

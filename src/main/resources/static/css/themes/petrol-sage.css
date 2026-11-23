@@ -1,0 +1,10 @@
+/* Theme: petrol-sage — chỉ khai báo biến, base.css dùng lại. */
+:root {
+  --bg: #172A2E;
+  --card: #20373C;
+  --primary: #8FB8A8;
+  --secondary: #D4A373;
+  --accent: #C97C5D;
+  --text: #E8E4D8;
+  --muted: #8FA3A3;
+}

@@ -1,0 +1,29 @@
+{
+  "video": {
+    "topicId": "R-08",
+    "track": "React",
+    "title": "Rules of Hooks & useReducer",
+    "theme": "midnight-brass"
+  },
+  "scene": {
+    "id": "s03-points",
+    "type": "points",
+    "accent": "2 luật",
+    "titleRest": "của Hooks — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này",
+    "points": [
+      {
+        "heading": "Chỉ gọi ở top level — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này",
+        "detail": "Không đặt trong if, vòng lặp hay sau return sớm — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template nàyKhông đặt trong if, vòng lặp hay sau return sớm — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này"
+      },
+      {
+        "heading": "Chỉ gọi trong React — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này",
+        "detail": "Trong component hoặc custom Hook, không trong hàm thường — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template nàyTrong component hoặc custom Hook, không trong hàm thường — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này"
+      },
+      {
+        "heading": "Ý thứ tư",
+        "detail": "Vượt quá 3 ý"
+      }
+    ],
+    "narration": "Chỉ có hai luật. Một: chỉ gọi Hook ở top level. Hai: chỉ gọi Hook trong component hoặc custom Hook."
+  }
+}

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head}">
+  <meta charset="utf-8">
+  <title>title</title>
+  <link rel="stylesheet" href="../../static/css/base.css">
+  <link rel="stylesheet" id="theme-css" href="../../static/css/themes/midnight-brass.css">
+  <script defer src="../../static/vendor/highlight/highlight.min.js"></script>
+  <script defer src="../../static/js/slide.js"></script>
+</head>
+<body class="scene scene--title" data-index="1" data-total="10"
+      th:attr="data-index=${index},data-total=${total}">
+
+<header class="chrome" th:replace="~{layout :: chrome}">
+  <div class="progress" data-progress></div>
+  <div class="chrome-row"><span class="track-chip">React</span><span class="topic-id">R-08</span></div>
+</header>
+
+<!-- Hình trang trí nét mảnh (nằm ngoài .stage để không tính tràn) -->
+<svg class="title-deco" viewBox="0 0 760 760" fill="none" stroke="currentColor" aria-hidden="true">
+  <circle cx="380" cy="380" r="360" stroke-width="1.5"/>
+  <circle cx="380" cy="380" r="286" stroke-width="1.5" stroke-dasharray="3 12"/>
+  <circle cx="380" cy="380" r="200" stroke-width="1.5"/>
+  <path d="M20 380a360 360 0 0 1 360-360" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="380" cy="20" r="9" fill="currentColor" stroke="none"/>
+  <circle cx="94" cy="380" r="6" fill="currentColor" stroke="none"/>
+  <path d="M180 380h400M380 180v400" stroke-width="1" opacity=".5"/>
+</svg>
+<svg class="title-deco-2" viewBox="0 0 620 160" fill="none" stroke="currentColor" aria-hidden="true">
+  <path d="M0 120C90 120 110 40 200 40s110 80 200 80 110-80 220-80" stroke-width="2" stroke-linecap="round"/>
+  <path d="M0 150C90 150 110 70 200 70s110 80 200 80 110-80 220-80" stroke-width="1.2" stroke-dasharray="2 10" stroke-linecap="round"/>
+</svg>
+
+<main class="stage stage--title">
+  <span class="chip anim-in" style="--order:0" th:text="${scene.chip}">Ôn bài 60 giây</span>
+  <h1 class="display anim-in" style="--order:1" data-fit="title" data-shrink="96"><span class="pill" th:if="${scene.accent != null}" th:text="${scene.accent}">Rules</span> <span th:text="${scene.titleRest}">of Hooks</span></h1>
+  <div class="rule anim-in" style="--order:2"></div>
+  <p class="hook anim-in" style="--order:3" data-fit="hook" th:text="${scene.hook}">Vì sao Hook không được nằm trong if?</p>
+</main>
+
+</body>
+</html>

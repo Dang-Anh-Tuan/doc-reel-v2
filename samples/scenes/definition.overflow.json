@@ -1,0 +1,18 @@
+{
+  "video": {
+    "topicId": "R-08",
+    "track": "React",
+    "title": "Rules of Hooks & useReducer",
+    "theme": "midnight-brass"
+  },
+  "scene": {
+    "id": "s02-definition",
+    "type": "definition",
+    "term": "useSyncExternalStoreWithSelector",
+    "expansion": "use* function",
+    "definition": "Hàm bắt đầu bằng use, cho component dùng state và các tính năng khác của React. — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template nàyHàm bắt đầu bằng use, cho component dùng state và các tính năng khác của React. — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template nàyHàm bắt đầu bằng use, cho component dùng state và các tính năng khác của React. — CHỮ THỪA CỐ Ý ĐỂ TRÀN KHUNG, vượt xa giới hạn cho phép của template này",
+    "example": "const [n, setN] = useState(0)",
+    "narration": "Hook là các hàm bắt đầu bằng chữ use, giúp component dùng state và các tính năng khác của React.",
+    "spoken": "Hook là các hàm bắt đầu bằng chữ diu, giúp component dùng state và các tính năng khác của React."
+  }
+}

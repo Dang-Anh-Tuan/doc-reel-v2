@@ -1,0 +1,23 @@
+{
+  "video": {
+    "topicId": "R-08",
+    "track": "React",
+    "title": "Rules of Hooks & useReducer",
+    "theme": "midnight-brass"
+  },
+  "scene": {
+    "id": "s09-quiz",
+    "type": "quiz",
+    "question": "Vì sao Hook phải được gọi cùng thứ tự ở mọi lần render?",
+    "options": [
+      "Để code dễ đọc hơn",
+      "React lưu state theo thứ tự",
+      "Để chạy nhanh hơn",
+      "Do TypeScript yêu cầu"
+    ],
+    "narration": "Câu hỏi phỏng vấn: vì sao Hook phải gọi cùng thứ tự ở mọi lần render?",
+    "answer": 1,
+    "explain": "React gắn state vào từng Hook theo thứ tự gọi, không theo tên biến.",
+    "revealNarration": "Đáp án B. React gắn state theo thứ tự gọi Hook, không theo tên biến."
+  }
+}

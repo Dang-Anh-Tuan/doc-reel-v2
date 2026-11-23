@@ -1,0 +1,10 @@
+/* Theme: deep-ocean-coral — chỉ khai báo biến, base.css dùng lại. */
+:root {
+  --bg: #14253A;
+  --card: #1C3150;
+  --primary: #E0907A;
+  --secondary: #7FB2C9;
+  --accent: #D8C08E;
+  --text: #EAF0F4;
+  --muted: #8DA2B8;
+}
