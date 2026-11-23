@@ -22,3 +22,6 @@ requests/
 
 # Worktree của agent
 .claude/worktrees/
+
+# Cấu hình Claude Code riêng từng máy
+.claude/settings.local.json
