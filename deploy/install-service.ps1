@@ -67,7 +67,31 @@ if (Test-Path $serviceExe) {
 }
 Copy-Item $Jar (Join-Path $InstallDir 'docreel.jar') -Force
 Copy-Item $WinSW $serviceExe -Force
-Copy-Item (Join-Path $PSScriptRoot 'docreel-service.xml') (Join-Path $InstallDir 'docreel-service.xml') -Force
+
+# Service chạy bằng LocalSystem → không có PATH người dùng (winget/pip cài vào profile) và không thấy
+# %LOCALAPPDATA%\ms-playwright. Ghi đường dẫn tuyệt đối của công cụ vào XML (không có bí mật).
+function Resolve-Tool([string]$name) {
+    $cmd = Get-Command $name -ErrorAction SilentlyContinue | Select-Object -First 1
+    if (-not $cmd) { throw "Không thấy '$name' trong PATH của người cài. Cài rồi chạy lại script." }
+    return $cmd.Source
+}
+$java = if ($env:JAVA_HOME -and (Test-Path (Join-Path $env:JAVA_HOME 'bin\java.exe'))) {
+    Join-Path $env:JAVA_HOME 'bin\java.exe'
+} else { Resolve-Tool 'java' }
+$toolEnv = [ordered]@{
+    FFMPEG_PATH = Resolve-Tool 'ffmpeg'
+    FFPROBE_PATH = Resolve-Tool 'ffprobe'
+    DOCREEL_TTS_EDGE_COMMAND = Resolve-Tool 'edge-tts'
+}
+$browsers = if ($env:PLAYWRIGHT_BROWSERS_PATH) { $env:PLAYWRIGHT_BROWSERS_PATH } else { Join-Path $env:LOCALAPPDATA 'ms-playwright' }
+if (Test-Path $browsers) { $toolEnv['PLAYWRIGHT_BROWSERS_PATH'] = $browsers }
+else { Write-Warning "Không thấy $browsers (Chromium của Playwright): --doctor sẽ báo Chromium CRITICAL." }
+
+$esc = { param($s) [Security.SecurityElement]::Escape($s) }
+$envXml = ($toolEnv.GetEnumerator() | ForEach-Object { "  <env name=`"$($_.Key)`" value=`"$(& $esc $_.Value)`"/>" }) -join "`r`n"
+$xml = Get-Content (Join-Path $PSScriptRoot 'docreel-service.xml') -Raw -Encoding UTF8
+$xml = $xml.Replace('<executable>java</executable>', "<executable>$(& $esc $java)</executable>").Replace('<!--TOOL_ENV-->', $envXml)
+[IO.File]::WriteAllText((Join-Path $InstallDir 'docreel-service.xml'), $xml, (New-Object Text.UTF8Encoding $false))
 if (Test-Path $EnvFile) { Copy-Item $EnvFile (Join-Path $InstallDir '.env') -Force }
 # Thư mục config/ (lexicon, ...) cạnh jar
 if (Test-Path (Join-Path $repo 'config')) {
@@ -92,7 +116,8 @@ Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Us
 Push-Location $InstallDir
 try {
     $env:DOCREEL_HOME = Join-Path $InstallDir 'data-root'
-    & java -jar (Join-Path $InstallDir 'docreel.jar') --doctor
+    foreach ($kv in $toolEnv.GetEnumerator()) { Set-Item -Path "env:$($kv.Key)" -Value $kv.Value }
+    & $java -jar (Join-Path $InstallDir 'docreel.jar') --doctor
     $doctorExit = $LASTEXITCODE
 } finally {
     Pop-Location

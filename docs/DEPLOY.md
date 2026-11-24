@@ -19,6 +19,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File deploy\install-service.ps1 -
 ```
 Script: copy jar, `.env`, `config\` vào `C:\docreel`, đăng ký service `docreel` (tự chạy khi khởi động máy, tự restart khi chết),
 tạo tác vụ dọn log (giữ 14 ngày), chạy `--doctor`, rồi mới start. `.env` không bao giờ được in ra; app tự đọc `.env` trong thư mục chạy.
+Service chạy bằng LocalSystem (không có PATH / `%LOCALAPPDATA%` của người cài) nên script ghi vào XML đường dẫn tuyệt đối
+của `java`, `FFMPEG_PATH`, `FFPROBE_PATH`, `DOCREEL_TTS_EDGE_COMMAND` (edge-tts) và `PLAYWRIGHT_BROWSERS_PATH`
+(mặc định `%LOCALAPPDATA%\ms-playwright` của người cài). Cài thêm/đổi công cụ → chạy lại script.
+Log mỗi dòng có `[jobId=...]` (biến `LOGGING_PATTERN_LEVEL` trong XML).
 Gỡ: thêm `-Uninstall` (giữ nguyên dữ liệu).
 
 ## Kiểm tra

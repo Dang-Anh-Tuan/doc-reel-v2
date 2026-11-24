@@ -2,13 +2,17 @@ package com.tuan.docreel.e2e;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.tuan.docreel.common.AppProperties;
@@ -35,9 +39,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -55,9 +61,10 @@ import tools.jackson.databind.json.JsonMapper;
  * (audio im lặng dài {@code số ký tự x 60ms}, không tốn quota) và YouTube giả (WireMock). Chạy:
  * {@code ./mvnw verify -Pe2e -Dit.test=EndToEndIT}.
  *
- * <p>Thả 3 file vào inbox: hợp lệ, sai (tiêu đề quá dài), bản sao của file hợp lệ. Mong đợi: 1 job UPLOADED với
- * youtube_id, input chuyển sang done/, file sai sang failed/ kèm lỗi, bản sao sang duplicate/; thả lại → không
- * job mới, không upload thêm.
+ * <p>Thả 3 file vào inbox: 2 hợp lệ (khác topicId) + 1 sai (tiêu đề quá dài). Mong đợi: 2 job UPLOADED với
+ * youtube_id, input sang done/, file sai sang failed/ kèm lỗi và không ảnh hưởng 2 job kia. ElevenLabs (WireMock)
+ * báo còn quota nhưng từ chối {@code quota_exceeded} khi đọc → fallback edge-tts, 0 ký tự ElevenLabs. Mỗi job có
+ * 4 attempt SUCCESS trong DB và log mang MDC {@code jobId}. Thả lại file đã có → duplicate/, không job, không upload.
  */
 @Tag("e2e")
 @SpringBootTest
@@ -70,15 +77,23 @@ class EndToEndIT {
     private static final Path SAMPLE = Path.of("samples", "full", "sample-all-scenes.json");
     private static final Path INVALID = Path.of("samples", "invalid", "title-too-long.json");
     private static final Path TOKEN_FILE = Path.of("target", "test-data", "youtube-token.enc");
+    private static final String SECOND_TOPIC = "R-98";
     private static final WireMockServer YOUTUBE =
+            new WireMockServer(WireMockConfiguration.options().dynamicPort());
+    private static final WireMockServer ELEVEN =
             new WireMockServer(WireMockConfiguration.options().dynamicPort());
 
     static {
         YOUTUBE.start();
+        ELEVEN.start();
     }
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
+        // ElevenLabs giả: key giả (đè biến môi trường nếu có, không bao giờ gọi API thật), hết quota khi đọc
+        registry.add("docreel.tts.primary", () -> "elevenlabs");
+        registry.add("docreel.tts.elevenlabs.api-key", () -> "e2e-fake-key");
+        registry.add("docreel.tts.elevenlabs.base-url", () -> "http://localhost:" + ELEVEN.port());
         String base = "http://localhost:" + YOUTUBE.port();
         registry.add("docreel.youtube.api-base-url", () -> base);
         registry.add("docreel.youtube.token-url", () -> base + "/token");
@@ -154,13 +169,38 @@ class EndToEndIT {
     @Autowired
     JdbcTemplate jdbc;
 
+    private final ListAppender<ILoggingEvent> logs = new ListAppender<>();
+
     @AfterAll
     static void stopServer() {
         YOUTUBE.stop();
+        ELEVEN.stop();
+    }
+
+    @AfterEach
+    void detachLogs() {
+        rootLogger().detachAppender(logs);
+        logs.stop();
+    }
+
+    private static ch.qos.logback.classic.Logger rootLogger() {
+        return (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
     }
 
     @BeforeEach
     void reset() throws IOException {
+        logs.start();
+        rootLogger().addAppender(logs);
+        jdbc.update("delete from tts_usage");
+        ELEVEN.resetAll();
+        ELEVEN.stubFor(get(urlPathEqualTo("/v1/user/subscription"))
+                .willReturn(aResponse()
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"character_limit\":1000000,\"character_count\":0}")));
+        ELEVEN.stubFor(post(urlPathMatching("/v1/text-to-speech/.*"))
+                .willReturn(aResponse()
+                        .withStatus(401)
+                        .withBody("{\"detail\":{\"status\":\"quota_exceeded\",\"message\":\"quota\"}}")));
         jdbc.update("delete from job_attempt");
         jdbc.update("delete from video_job");
         for (Path dir : props.dirs().all()) {
@@ -186,49 +226,114 @@ class EndToEndIT {
     }
 
     @Test
-    void validInvalidAndDuplicateFiles() throws Exception {
-        Files.createDirectories(props.dirs().inbox());
-        Files.copy(SAMPLE, props.dirs().inbox().resolve("a-valid.json"));
-        Files.copy(INVALID, props.dirs().inbox().resolve("b-invalid.json"));
-        Files.copy(SAMPLE, props.dirs().inbox().resolve("c-duplicate.json"));
+    void threeFilesOneInvalidThenDuplicateWithElevenLabsQuotaFallback() throws Exception {
+        Path inboxDir = props.dirs().inbox();
+        Files.createDirectories(inboxDir);
+        Files.copy(SAMPLE, inboxDir.resolve("a-valid.json"));
+        Files.copy(INVALID, inboxDir.resolve("b-invalid.json"));
+        // File hợp lệ thứ hai: cùng nội dung, khác topicId → khóa idempotency khác → job riêng
+        String second = Files.readString(SAMPLE, StandardCharsets.UTF_8)
+                .replaceFirst("\"topicId\"\\s*:\\s*\"R-08\"", "\"topicId\": \"" + SECOND_TOPIC + "\"");
+        assertThat(second).contains(SECOND_TOPIC);
+        Files.writeString(inboxDir.resolve("c-valid.json"), second, StandardCharsets.UTF_8);
 
         assertThat(inbox.scan()).isEqualTo(3);
 
-        List<VideoJob> all = jobs.findAll();
-        assertThat(all).as("chỉ file hợp lệ đầu tiên thành job").hasSize(1);
+        List<VideoJob> created = jobs.findAll();
+        assertThat(created)
+                .as("2 file hợp lệ thành 2 job, file lỗi không tạo job")
+                .hasSize(2);
         assertThat(names(props.dirs().failed())).anyMatch(n -> n.startsWith("b-invalid.json"));
         assertThat(names(props.dirs().failed())).anyMatch(n -> n.endsWith(".error.txt"));
-        assertThat(names(props.dirs().duplicate())).anyMatch(n -> n.startsWith("c-duplicate"));
-        assertThat(props.dirs().inbox()).isEmptyDirectory();
+        assertThat(inboxDir).isEmptyDirectory();
 
         long start = System.nanoTime();
         int steps = 0;
         while (worker.runOnce()) {
             steps++;
-            assertThat(Duration.ofNanos(System.nanoTime() - start)).isLessThan(Duration.ofMinutes(5));
+            assertThat(Duration.ofNanos(System.nanoTime() - start)).isLessThan(Duration.ofMinutes(10));
         }
         assertThat(steps)
-                .as("RECEIVED→RENDERED→VOICED→ASSEMBLED→UPLOADED = 4 bước")
-                .isEqualTo(4);
+                .as("2 job × (RECEIVED→RENDERED→VOICED→ASSEMBLED→UPLOADED) = 8 bước")
+                .isEqualTo(8);
 
-        VideoJob job = jobs.findById(all.getFirst().getId()).orElseThrow();
-        assertThat(job.getState()).as("lỗi: %s", job.getErrorMessage()).isEqualTo(JobState.UPLOADED);
-        assertThat(job.getYoutubeId()).isEqualTo(YOUTUBE_ID);
-        assertThat(job.getTtsProvider()).isEqualToIgnoringCase("edge");
-        assertThat(props.dirs().done().resolve(job.getId() + "-input.json")).isRegularFile();
+        for (VideoJob each : created) {
+            VideoJob job = jobs.findById(each.getId()).orElseThrow();
+            assertThat(job.getState()).as("lỗi: %s", job.getErrorMessage()).isEqualTo(JobState.UPLOADED);
+            assertThat(job.getYoutubeId()).isEqualTo(YOUTUBE_ID);
+            assertThat(job.getTtsProvider())
+                    .as("ElevenLabs hết quota → edge-tts")
+                    .isEqualToIgnoringCase("edge");
+            assertThat(props.dirs().done().resolve(job.getId() + "-input.json")).isRegularFile();
+            assertAttempts(job);
+            assertJobLogs(job);
+            assertVideo(props.dirs().work().resolve(job.getId().toString()));
+        }
 
-        YOUTUBE.verify(1, postRequestedFor(urlPathEqualTo("/upload/youtube/v3/videos")));
-        YOUTUBE.verify(1, postRequestedFor(urlPathEqualTo("/youtube/v3/playlistItems")));
-
-        assertVideo(props.dirs().work().resolve(job.getId().toString()));
+        YOUTUBE.verify(2, postRequestedFor(urlPathEqualTo("/upload/youtube/v3/videos")));
+        YOUTUBE.verify(2, postRequestedFor(urlPathEqualTo("/youtube/v3/playlistItems")));
+        // ElevenLabs được thử (còn quota theo /subscription) nhưng từ chối quota_exceeded → không tính ký tự nào
+        ELEVEN.verify(2, getRequestedFor(urlPathEqualTo("/v1/user/subscription")));
+        assertThat(ELEVEN.findAll(postRequestedFor(urlPathMatching("/v1/text-to-speech/.*"))))
+                .hasSizeGreaterThanOrEqualTo(2);
+        assertThat(jdbc.queryForObject(
+                        "select coalesce(sum(chars), 0) from tts_usage where provider = 'elevenlabs'", Long.class))
+                .as("không phát sinh ký tự ElevenLabs")
+                .isZero();
+        assertThat(jdbc.queryForObject(
+                        "select coalesce(sum(chars), 0) from tts_usage where provider = 'edge'", Long.class))
+                .isPositive();
+        assertThat(logs.list)
+                .as("cảnh báo fallback có jobId")
+                .anyMatch(e -> e.getFormattedMessage().contains("hết quota")
+                        && e.getMDCPropertyMap().containsKey("jobId"));
 
         // Thả lại cùng file → duplicate, không job mới, không upload thêm
-        Files.copy(SAMPLE, props.dirs().inbox().resolve("d-again.json"));
+        Files.copy(SAMPLE, inboxDir.resolve("d-again.json"));
         assertThat(inbox.scan()).isEqualTo(1);
-        assertThat(jobs.count()).isEqualTo(1);
+        assertThat(jobs.count()).isEqualTo(2);
         assertThat(names(props.dirs().duplicate())).anyMatch(n -> n.startsWith("d-again"));
         assertThat(worker.runOnce()).isFalse();
-        YOUTUBE.verify(1, postRequestedFor(urlPathEqualTo("/upload/youtube/v3/videos")));
+        YOUTUBE.verify(2, postRequestedFor(urlPathEqualTo("/upload/youtube/v3/videos")));
+    }
+
+    /** Lịch sử attempt trong DB: đúng 4 bước, mỗi bước 1 lần SUCCESS, có thời lượng. */
+    private void assertAttempts(VideoJob job) {
+        List<String> rows = jdbc.queryForList(
+                "select step || ':' || attempt_no || ':' || outcome from job_attempt where job_id = ?"
+                        + " and duration_ms is not null order by started_at, id",
+                String.class,
+                job.getId());
+        assertThat(rows)
+                .containsExactly("RENDER:1:SUCCESS", "VOICE:1:SUCCESS", "ASSEMBLE:1:SUCCESS", "UPLOAD:1:SUCCESS");
+    }
+
+    /** Mọi log của pipeline cho job này mang MDC {@code jobId}; mỗi bước có dòng "Chạy bước". */
+    private void assertJobLogs(VideoJob job) {
+        String id = job.getId().toString();
+        List<ILoggingEvent> mine = logs.list.stream()
+                .filter(e -> id.equals(e.getMDCPropertyMap().get("jobId")))
+                .toList();
+        assertThat(mine.stream()
+                        .filter(e -> e.getLoggerName().endsWith("PipelineWorker"))
+                        .map(ILoggingEvent::getFormattedMessage)
+                        .filter(m -> m.startsWith("Chạy bước")))
+                .hasSize(4);
+        assertThat(mine.stream().map(ILoggingEvent::getLoggerName))
+                .as("log của các bước voice/video/youtube có jobId")
+                .anyMatch(n -> n.contains(".voice."))
+                .anyMatch(n -> n.contains(".video."))
+                .anyMatch(n -> n.contains(".youtube."));
+        assertThat(logs.list.stream()
+                        .filter(e -> e.getLoggerName()
+                                .matches("com\\.tuan\\.docreel\\.(pipeline|render|voice|video|youtube)\\..*"))
+                        .filter(e -> !e.getMDCPropertyMap().containsKey("jobId")))
+                .as("log pipeline không có jobId thì phải nêu id trong nội dung")
+                .allMatch(e -> mentionsJobId(e.getFormattedMessage()));
+    }
+
+    private boolean mentionsJobId(String message) {
+        return jobs.findAll().stream().anyMatch(j -> message.contains(j.getId().toString()));
     }
 
     private void assertVideo(Path workDir) throws IOException {

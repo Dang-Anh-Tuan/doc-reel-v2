@@ -17,6 +17,11 @@
   <arguments>-Xmx1g -Dfile.encoding=UTF-8 -jar "%BASE%\docreel.jar"</arguments>
 
   <env name="DOCREEL_HOME" value="%BASE%\data-root"/>
+  <!-- In jobId (MDC) ở mọi dòng log, kể cả log stdout mà WinSW ghi file (SPEC 13: log theo jobId) -->
+  <env name="LOGGING_PATTERN_LEVEL" value="%5p [jobId=%X{jobId:-}]"/>
+  <!-- Service chạy bằng LocalSystem: không thấy PATH / %LOCALAPPDATA% của người cài. install-service.ps1 thay dòng
+       dưới bằng đường dẫn tuyệt đối của java, ffmpeg, ffprobe, edge-tts và thư mục Chromium của Playwright. -->
+  <!--TOOL_ENV-->
 
   <startmode>Automatic</startmode>
   <delayedAutoStart>true</delayedAutoStart>

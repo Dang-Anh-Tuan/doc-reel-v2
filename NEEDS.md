@@ -49,7 +49,16 @@
 # NEEDS (P11)
 
 1. `scripts/check.ps1` (orchestrator): cờ `-E2E` hiện chạy `./mvnw verify -Pe2e` — đã đủ để chạy `EndToEndIT` (profile e2e bỏ loại trừ tag `media,e2e`). Đề xuất: (a) khi `-E2E` thì chạy thêm `java -jar target\docreel-*.jar --doctor` sau verify (cần `package` trước); (b) in cảnh báo rõ nếu Chromium chưa cài (`ChromiumCheck` trong doctor đã báo; test media/e2e sẽ lỗi `Executable doesn't exist`). `-E2E` chạy ~4 phút (render 24 slide + ghép video thật).
-2. Chromium Playwright (máy mới / máy này): Playwright 1.65.1 cần `chromium_headless_shell-1255`; máy có sẵn chỉ `chromium-1248` → doctor/ChromiumCheck báo CRITICAL. Cài: `java -cp <classpath> com.microsoft.playwright.CLI install chromium` (lệnh `./mvnw dependency:build-classpath` lấy classpath) hoặc `npx playwright@1.65.1 install chromium`. Đã cài trên máy dev khi chạy P11. Đề xuất ghi vào README / docs/DEPLOY.md (P11 đã ghi trong DEPLOY.md).
+2. Chromium Playwright (máy mới / máy này): Playwright 1.65.1 cần `chromium_headless_shell-1255`; máy có sẵn chỉ `chromium-1248` → doctor/ChromiumCheck báo CRITICAL. Cài: `java -cp <classpath> com.microsoft.playwright.CLI install chromium` (lệnh `./mvnw dependency:build-classpath` lấy classpath) hoặc `npx playwright@1.65.1 install chromium`. Máy dev hiện tại đã có `chromium-1255` + `chromium_headless_shell-1255`. Đề xuất ghi vào README / docs/DEPLOY.md (P11 đã ghi trong DEPLOY.md).
 3. `application.yml` (orchestrator, tùy chọn): prod nên đặt `logging.file.name` hoặc để WinSW ghi stdout theo ngày (hiện chọn WinSW `roll-by-time`, không cần sửa yml). Nếu muốn log app ra file riêng có xoay vòng: `logging.logback.rollingpolicy.max-history: 14` + `logging.file.name: ${DOCREEL_HOME}/logs/docreel.log`.
 4. `SystemSelfCheck` mục mới đã thêm (không sửa file dùng chung): `FfmpegCheck`, `DiskSpaceCheck` (package `system`), `ChromiumCheck` (`render`), `YouTubeTokenCheck` (`youtube`). Đặt ở `render`/`youtube` vì `system -> youtube -> pipeline -> system` sẽ tạo vòng ArchUnit. Chưa có mục: edge-tts / quota ElevenLabs (P8), render thử 1 template mẫu (P6) — để phase đó hoặc orchestrator thêm bean `SelfCheckItem`.
 5. `deploy/` mới (không thuộc danh sách file dùng chung): `docreel-service.xml`, `install-service.ps1`. WinSW không tự xóa log cũ → script đăng ký tác vụ Windows `DocReel-LogCleanup` (03:00 hằng ngày, xóa log > 14 ngày).
+6. `application.yml` (orchestrator, NÊN làm cho tiêu chí "log theo jobId"): pattern mặc định của Spring Boot KHÔNG in MDC, nên `jobId` chỉ có trong sự kiện log (EndToEndIT kiểm bằng ListAppender) chứ không hiện trên dòng log. Đề xuất:
+   ```yaml
+   logging:
+     pattern:
+       level: "%5p [jobId=%X{jobId:-}]"
+   ```
+   Hiện P11 chỉ đặt tạm qua biến `LOGGING_PATTERN_LEVEL` trong `deploy/docreel-service.xml` (service). Khi yml có rồi thì xóa dòng env đó.
+7. `scripts/check.ps1` (orchestrator, tùy chọn): `-Media -E2E` chạy test media 2 lần (`verify -Pmedia` rồi `verify -Pe2e` vốn đã gồm media). Khi có `-E2E` có thể bỏ bước `-Pmedia` để tiết kiệm ~4 phút.
+8. Service chạy LocalSystem: `install-service.ps1` ghi đường dẫn tuyệt đối `java`, `FFMPEG_PATH`, `FFPROBE_PATH`, `DOCREEL_TTS_EDGE_COMMAND`, `PLAYWRIGHT_BROWSERS_PATH` vào XML lúc cài (công cụ cài theo user không nằm trong PATH của SYSTEM). Không cần sửa file dùng chung.
