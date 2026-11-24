@@ -3,6 +3,7 @@ package com.tuan.docreel.ingest;
 import com.tuan.docreel.common.AppProperties;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -44,16 +45,31 @@ public class InboxWriter {
         return clean(channel, "inbox") + "-" + STAMP.format(LocalDateTime.now(clock)) + "-" + clean(ref, "x") + ".json";
     }
 
-    /** Ghi nội dung vào inbox, trả đường dẫn file {@code .json} cuối cùng. */
+    /** Ghi nội dung vào inbox, trả đường dẫn file {@code .json} cuối cùng (trùng tên thì thêm hậu tố -2, -3...). */
     public Path write(String channel, String ref, byte[] json) {
         try {
             Files.createDirectories(inbox);
-            Path target = inbox.resolve(fileName(channel, ref));
-            Path part = inbox.resolve(target.getFileName() + PART_SUFFIX);
-            Files.write(part, json);
-            afterPartWritten.accept(part);
-            Files.move(part, target, StandardCopyOption.ATOMIC_MOVE);
-            return target;
+            String base = fileName(channel, ref);
+            String stem = base.substring(0, base.length() - ".json".length());
+            for (int n = 1; ; n++) {
+                String name = n == 1 ? base : stem + "-" + n + ".json";
+                Path target = inbox.resolve(name);
+                Path part = inbox.resolve(name + PART_SUFFIX);
+                try {
+                    // Chiếm tên .part (CREATE_NEW) để 2 bên ghi cùng lúc không dẫm nhau.
+                    Files.createFile(part);
+                } catch (FileAlreadyExistsException e) {
+                    continue;
+                }
+                if (Files.exists(target)) {
+                    Files.deleteIfExists(part);
+                    continue;
+                }
+                Files.write(part, json);
+                afterPartWritten.accept(part);
+                Files.move(part, target, StandardCopyOption.ATOMIC_MOVE);
+                return target;
+            }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

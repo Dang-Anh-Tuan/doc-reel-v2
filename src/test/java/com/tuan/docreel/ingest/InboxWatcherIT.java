@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.tuan.docreel.common.AppProperties;
 import com.tuan.docreel.job.JobRepository;
+import com.tuan.docreel.script.ScriptParser;
 import com.tuan.docreel.support.TestcontainersConfiguration;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -91,7 +92,11 @@ class InboxWatcherIT {
         assertThat(failed.resolve("claude-20261123T000000-bad.json")).exists();
         Path err = failed.resolve("claude-20261123T000000-bad.json.error.txt");
         assertThat(err).exists();
-        assertThat(Files.readString(err)).startsWith("$:");
+        var expected = new ScriptParser().parse(Files.readAllBytes(MALFORMED)).error();
+        assertThat(expected).hasSize(1);
+        assertThat(Files.readString(err).trim())
+                .isEqualTo(expected.get(0).path() + ": " + expected.get(0).message());
+        assertThat(expected.get(0).path()).isEqualTo("$");
         assertThat(jobs.count()).isZero();
     }
 
@@ -120,6 +125,24 @@ class InboxWatcherIT {
 
         assertThat(jobs.count()).isEqualTo(1);
         assertThat(count(props.dirs().duplicate(), ".json")).isEqualTo(1);
+        assertThat(count(props.dirs().inbox(), ".json")).isZero();
+    }
+
+    @Test
+    void crashBetweenSubmitAndMoveIsCompletedNextScan() throws Exception {
+        // Giả lập crash: job đã tạo (RECEIVED) nhưng file còn trong inbox, work/{jobId}/input.json chưa có.
+        writer.write("claude", "first", Files.readAllBytes(VALID));
+        watcher.scan();
+        var job = jobs.findAll().get(0);
+        Path input = props.dirs().work().resolve(job.getId().toString()).resolve("input.json");
+        Files.delete(input);
+
+        writer.write("claude", "retry", Files.readAllBytes(VALID));
+        watcher.scan();
+
+        assertThat(jobs.count()).isEqualTo(1);
+        assertThat(input).exists();
+        assertThat(count(props.dirs().duplicate(), ".json")).isZero();
         assertThat(count(props.dirs().inbox(), ".json")).isZero();
     }
 }

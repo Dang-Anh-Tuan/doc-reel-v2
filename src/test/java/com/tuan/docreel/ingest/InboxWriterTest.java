@@ -56,4 +56,17 @@ class InboxWriterTest {
         assertThat(writer.fileName("a/b", "../x y")).matches("a_b-\\d{8}T\\d{6}-___x_y\\.json");
         assertThat(writer.fileName(null, null)).isEqualTo("inbox-20261123T213000-x.json");
     }
+
+    @Test
+    void twoWritesInSameSecondKeepBothFiles() throws Exception {
+        InboxWriter writer = new InboxWriter(inbox, CLOCK, p -> {});
+
+        Path first = writer.write("telegram", "5521", "A".getBytes(StandardCharsets.UTF_8));
+        Path second = writer.write("telegram", "5521", "B".getBytes(StandardCharsets.UTF_8));
+
+        assertThat(second).isNotEqualTo(first);
+        assertThat(Files.readString(first)).isEqualTo("A");
+        assertThat(Files.readString(second)).isEqualTo("B");
+        assertThat(second.getFileName().toString()).isEqualTo("telegram-20261123T213000-5521-2.json");
+    }
 }

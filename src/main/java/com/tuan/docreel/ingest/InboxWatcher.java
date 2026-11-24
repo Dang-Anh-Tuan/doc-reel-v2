@@ -2,7 +2,9 @@ package com.tuan.docreel.ingest;
 
 import com.tuan.docreel.common.AppProperties;
 import com.tuan.docreel.common.Result;
+import com.tuan.docreel.job.JobRepository;
 import com.tuan.docreel.job.JobService;
+import com.tuan.docreel.job.JobState;
 import com.tuan.docreel.job.SubmitResult;
 import com.tuan.docreel.script.FieldError;
 import com.tuan.docreel.script.Origin;
@@ -37,9 +39,11 @@ public class InboxWatcher {
 
     private final AppProperties.Dirs dirs;
     private final JobService jobs;
+    private final JobRepository jobRepository;
     private final ScriptParser parser = new ScriptParser();
 
-    public InboxWatcher(AppProperties props, JobService jobs) {
+    public InboxWatcher(AppProperties props, JobService jobs, JobRepository jobRepository) {
+        this.jobRepository = jobRepository;
         this.dirs = props.dirs();
         this.jobs = jobs;
     }
@@ -93,11 +97,13 @@ public class InboxWatcher {
         Result<VideoScript, List<FieldError>> parsed = parser.parse(bytes);
         String name = file.getFileName().toString();
         if (!parsed.isOk()) {
-            Path moved = moveTo(file, dirs.failed(), name);
+            Path target = freeTarget(dirs.failed(), name);
+            // Ghi .error.txt trước: nếu crash giữa chừng, file vẫn ở inbox và lần sau xử lý lại.
             Files.writeString(
-                    moved.resolveSibling(moved.getFileName() + ERROR_SUFFIX),
+                    target.resolveSibling(target.getFileName() + ERROR_SUFFIX),
                     errorText(parsed.error()),
                     StandardCharsets.UTF_8);
+            Files.move(file, target);
             log.warn(
                     "File {} không hợp lệ ({} lỗi) → failed/",
                     name,
@@ -107,12 +113,21 @@ public class InboxWatcher {
         VideoScript script = parsed.value();
         Origin origin = script.origin() != null ? script.origin() : new Origin(CHANNEL, null, name);
         SubmitResult result = jobs.submit(script, origin);
-        if (!result.created()) {
-            moveTo(file, dirs.duplicate(), name);
-            log.info("File {} trùng job {} → duplicate/", name, result.jobId());
-            return;
-        }
         UUID jobId = result.jobId();
+        if (!result.created()) {
+            Path input = dirs.work().resolve(jobId.toString()).resolve(INPUT_FILE);
+            boolean finished = jobRepository
+                    .findById(jobId)
+                    .map(j -> j.getState() == JobState.UPLOADED)
+                    .orElse(true);
+            if (finished || Files.exists(input)) {
+                moveTo(file, dirs.duplicate(), name);
+                log.info("File {} trùng job {} → duplicate/", name, jobId);
+                return;
+            }
+            // Lần trước crash giữa submit và move: job đã tạo mà chưa có input → hoàn tất giao dịch dang dở.
+            log.info("File {} thuộc job {} đã tạo nhưng chưa được chuyển → work/", name, jobId);
+        }
         MDC.put("jobId", jobId.toString());
         try {
             Path jobDir = dirs.work().resolve(jobId.toString());
@@ -126,11 +141,12 @@ public class InboxWatcher {
 
     /** Chuyển file sang thư mục đích; trùng tên thì thêm tiền tố thời gian để không ghi đè file cũ. */
     private static Path moveTo(Path file, Path dir, String name) throws IOException {
+        return Files.move(file, freeTarget(dir, name));
+    }
+
+    private static Path freeTarget(Path dir, String name) {
         Path target = dir.resolve(name);
-        if (Files.exists(target)) {
-            target = dir.resolve(System.currentTimeMillis() + "-" + name);
-        }
-        return Files.move(file, target);
+        return Files.exists(target) ? dir.resolve(System.currentTimeMillis() + "-" + name) : target;
     }
 
     private static String errorText(List<FieldError> errors) {
