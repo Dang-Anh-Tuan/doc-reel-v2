@@ -10,3 +10,7 @@
 2. `.gitignore` / `src/.env.example` (orchestrator): thêm `data/youtube-token.enc` vào ignore và 3 tên biến môi trường YouTube vào `.env.example`.
 3. `SystemSelfCheck` (P11/orchestrator): thêm mục "token YouTube" dùng `OAuthTokenStore.exists()`.
 4. Ghép pipeline (P5/P2): `YouTubeUploadStep` mong MP4 ở `work/{jobId}/video.mp4` (hằng `VIDEO_FILE`) và ghi id vào `work/{jobId}/youtube-id.txt`; P5 lưu `youtube_id` vào `video_job` và lắng nghe `VideoUploadedEvent` (jobId, youtubeId, topicId, track, title, privacyStatus).
+
+# NEEDS (P3)
+
+1. Merge: P3 thêm một dòng vào `job/JobRepository` (`findByState(JobState, Pageable)`); nếu P4/P5 cũng sửa file này thì giữ cả hai. Không cần sửa file dùng chung nào.
