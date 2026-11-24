@@ -1,10 +1,11 @@
 import { NavLink, Outlet } from "react-router";
 import { IconJobs, IconSlides } from "@/components/icons";
 import styles from "./AppShell.module.css";
+import { SystemStatusCard } from "./SystemStatusCard";
 
 const NAV = [
   { to: "/preview", label: "Template", icon: IconSlides, tag: null },
-  { to: "/jobs", label: "Jobs", icon: IconJobs, tag: "bản 2" },
+  { to: "/jobs", label: "Jobs", icon: IconJobs, tag: null },
 ] as const;
 
 export function AppShell() {
@@ -30,6 +31,9 @@ export function AppShell() {
             ))}
           </ul>
         </nav>
+        <div className={styles.status}>
+          <SystemStatusCard />
+        </div>
         <footer className={styles.footer}>
           <span className={styles.env} data-env={import.meta.env.DEV ? "dev" : "prod"}>
             {import.meta.env.DEV ? "dev" : "prod"}
