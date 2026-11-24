@@ -184,7 +184,7 @@ samples/
 ### P1 · UC2 (kiểm tra kịch bản) · story 2 · **Tôi**
 **Kết quả:** đọc JSON → `VideoScript` (record) đã kiểm tra, trả lỗi theo đường dẫn trường.
 - `script.VideoScript`, `sealed interface Scene` + 10 record (`TitleScene`…), Jackson `@JsonTypeInfo(property = "type")`, `FAIL_ON_UNKNOWN_PROPERTIES`.
-- Bean Validation trên record + `ScriptValidator` cho luật chéo (SPEC 9.1).
+- `ScriptValidator` viết tay cho mọi luật (không dùng Bean Validation annotation; xem SPEC 9.1).
 - `ScriptParser.parse(byte[]) → Result<VideoScript, List<FieldError>>`; `contentHash()` (bỏ `origin`).
 - Tạo `samples/invalid/` + `expected.json` (mục 2.4).
 

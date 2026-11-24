@@ -116,7 +116,7 @@ sequenceDiagram
 
     FS->>W: file R-08.json
     W->>J: submit(file)
-    J->>J: parse + validate (Jackson + Bean Validation)
+    J->>J: parse + validate (Jackson + ScriptValidator)
     J->>DB: tìm theo idempotencyKey
     alt đã có video
         J-->>FS: chuyển sang duplicate/
@@ -639,7 +639,7 @@ Mẫu đầy đủ: `samples/full/sample-all-scenes.json` (bài R-08, đủ 10 l
 ```
 
 **Quy tắc validate**
-- Bean Validation trên record (`@NotBlank`, `@Size`, `@Pattern`) + `ScriptValidator` cho ràng buộc chéo: scene đầu/cuối, `id` không trùng, số dòng/độ dài dòng code, `answer < options.size()`, mỗi hàng `table` đúng số cột, `highlight` nằm trong số dòng code, `theme` thuộc danh sách.
+- `ScriptValidator` viết tay (không dùng Bean Validation annotation, để đường dẫn lỗi dạng `scenes[8].answer` đúng chuẩn và khớp validator web P14): giới hạn độ dài trường, scene đầu/cuối, `id` không trùng, số dòng/độ dài dòng code, `answer < options.size()`, mỗi hàng `table` đúng số cột (header ≤ 18 ký tự), `highlight` nằm trong số dòng code, `theme` thuộc danh sách. Luật bổ sung: scene `id` khớp `^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$` (chặn path traversal), mỗi `sources[i]` là URL http(s), `lang` ≤ 30, `file` ≤ 60, cấm key JSON trùng và nội dung thừa sau JSON. `contentHash` coi `theme` thiếu = `midnight-brass`.
 - Validator chặn trước **theo số ký tự**; `slide.js` chặn sau **theo hình hiển thị thực** (`data-problems`). Một trong hai sai → job FAILED, không retry tự động.
 - **Không giới hạn tổng thời lượng** (mỗi slide dài bằng audio của nó, mục 8; > 3 phút chỉ cảnh báo). Lexicon áp cho mọi `narration` / `spoken` / `revealNarration`.
 - Trường lạ → lỗi (`FAIL_ON_UNKNOWN_PROPERTIES`) để bắt lỗi gõ tên trường từ AI.
