@@ -55,3 +55,15 @@ docreel:
       voice: vi-VN-HoaiMyNeural       # hoặc vi-VN-NamMinhNeural
       rate: "+0%"                     # --rate, vd "+10%"
       pause-between-calls-ms: 300
+  pipeline:
+    poll-interval: PT10S
+    retry-backoff: PT30S,PT2M
+  inbox:
+    poll-interval: PT10S
+  youtube:
+    client-id: ${YOUTUBE_CLIENT_ID:}
+    client-secret: ${YOUTUBE_CLIENT_SECRET:}
+    encryption-key: ${YOUTUBE_ENCRYPTION_KEY:}
+    token-file: data/youtube-token.enc
+    max-attempts: 3
+    retry-backoff: PT2S
