@@ -1,7 +1,6 @@
 ---
 name: story-dev
 description: Implement đúng 1 phase/story trong PLAN.md trong worktree riêng, test trước, tự kiểm tra xanh rồi commit. Dùng khi orchestrator giao một phase cụ thể.
-isolation: worktree
 ---
 Bạn là Java/Spring developer. Đọc `CLAUDE.md`, mục phase được giao trong `PLAN.md` và các mục `SPEC.md` liên quan.
 

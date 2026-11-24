@@ -3,7 +3,7 @@
 | Đợt | Phase | Trạng thái | Branch | Kiểm tra phase | check.ps1 | Giải thích |
 |---|---|---|---|---|---|---|
 | — | Template slide (story 7) | ✅ có sẵn | | | | |
-| W0 | P0 | 🔄 đang làm | | | | |
+| W0 | P0 | ✅ merged | phase/p0 | ĐẠT | ĐẠT | docs/explain/P0.md |
 | W1 | P1 | ⏳ | | | | |
 | W1 | P6 render + gallery (G1) | ⏳ | | | | |
 | W1 | P9 | ⏳ | | | | |
