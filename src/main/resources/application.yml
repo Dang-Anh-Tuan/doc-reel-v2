@@ -48,7 +48,7 @@ docreel:
       api-key: ${ELEVENLABS_API_KEY:}
       base-url: https://api.elevenlabs.io
       model: eleven_flash_v2_5
-      voice-id: "TODO_CHON_SAU"       # lấy từ Voice Library (P7)
+      voice-id: "2VozU7Otb8AvGqzNAtnE"  # Ngọc Anh (warm and clear), đã chọn ở G2
       speed: 1.0                      # voice_settings.speed, 0.7–1.2
     edge:
       command: edge-tts               # hoặc đường dẫn đầy đủ tới edge-tts(.exe)

@@ -12,8 +12,8 @@
 | W2 | P10 | ✅ merged | phase/p10 | ĐẠT | ĐẠT | docs/explain/P10.md |
 | — | P7 spike giọng (G2, người làm) | ⏳ | | | | |
 | W3 | P3 | ✅ merged | phase/p3 | ĐẠT | ĐẠT | docs/explain/P3.md |
-| W3 | P4 | 🔄 sửa theo review | phase/p4 | | | |
+| W3 | P4 | ✅ merged | phase/p4 | ĐẠT | ĐẠT | docs/explain/P4.md |
 | W4 | P5 | ⏳ | | | | |
 | W5 | P11 | ⏳ | | | | |
 
-Cổng: G0 ✅ · G1 ✅ · G2 ⏳ · G3 ⏳ · G4 ⏳ · G5 ⏳
+Cổng: G0 ✅ · G1 ✅ · G2 🔄 (đã chọn giọng, còn lexicon) · G3 ⏳ · G4 ⏳ · G5 ⏳
