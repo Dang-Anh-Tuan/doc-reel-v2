@@ -1,0 +1,35 @@
+<!--
+  WinSW v2/v3 service config cho DocReel. install-service.ps1 copy file này thành docreel-service.xml cạnh
+  docreel-service.exe (WinSW đổi tên) trong thư mục cài đặt.
+
+  Không có biến môi trường bí mật nào ở đây: app tự đọc .env trong thư mục chạy (%BASE%) nhờ
+  spring.config.import=optional:file:.env[.properties] (ELEVENLABS_API_KEY, YOUTUBE_*, DB_PASSWORD ...).
+  Chỉ đặt các biến không bí mật.
+-->
+<service>
+  <id>docreel</id>
+  <name>DocReel</name>
+  <description>DocReel: JSON -> slide -> giọng đọc -> video -> YouTube (private)</description>
+
+  <!-- %BASE% = thư mục chứa docreel-service.exe; cũng là thư mục chứa docreel.jar và .env -->
+  <workingdirectory>%BASE%</workingdirectory>
+  <executable>java</executable>
+  <arguments>-Xmx1g -Dfile.encoding=UTF-8 -jar "%BASE%\docreel.jar"</arguments>
+
+  <env name="DOCREEL_HOME" value="%BASE%\data-root"/>
+
+  <startmode>Automatic</startmode>
+  <delayedAutoStart>true</delayedAutoStart>
+  <onfailure action="restart" delay="30 sec"/>
+  <onfailure action="restart" delay="2 min"/>
+  <onfailure action="none"/>
+  <resetfailure>1 hour</resetfailure>
+  <stoptimeout>60 sec</stoptimeout>
+
+  <!-- Log theo ngày: logs\docreel-service.yyyyMMdd.out.log / .err.log. Giữ 14 ngày: do tác vụ dọn log của
+       install-service.ps1 (WinSW không tự xóa log cũ). -->
+  <logpath>%BASE%\logs</logpath>
+  <log mode="roll-by-time">
+    <pattern>yyyyMMdd</pattern>
+  </log>
+</service>
