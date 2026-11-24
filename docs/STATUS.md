@@ -10,10 +10,10 @@
 | W2 | P2 | ✅ merged | phase/p2 | ĐẠT | ĐẠT | docs/explain/P2.md |
 | W2 | P8 | ✅ merged | phase/p8 | ĐẠT | ĐẠT | docs/explain/P8.md |
 | W2 | P10 | ✅ merged | phase/p10 | ĐẠT | ĐẠT | docs/explain/P10.md |
-| — | P7 spike giọng (G2, người làm) | ⏳ | | | | |
+| — | P7 spike giọng (G2, người làm) | ✅ giọng + lexicon | | | | |
 | W3 | P3 | ✅ merged | phase/p3 | ĐẠT | ĐẠT | docs/explain/P3.md |
 | W3 | P4 | ✅ merged | phase/p4 | ĐẠT | ĐẠT | docs/explain/P4.md |
-| W4 | P5 | ⏳ | | | | |
+| W4 | P5 | ✅ merged | phase/p5 | ĐẠT | ĐẠT | docs/explain/P5.md |
 | W5 | P11 | ⏳ | | | | |
 
-Cổng: G0 ✅ · G1 ✅ · G2 🔄 (đã chọn giọng, còn lexicon) · G3 ⏳ · G4 ⏳ · G5 ⏳
+Cổng: G0 ✅ · G1 ✅ · G2 ✅ · G3 ⏳ · G4 ⏳ · G5 ⏳
