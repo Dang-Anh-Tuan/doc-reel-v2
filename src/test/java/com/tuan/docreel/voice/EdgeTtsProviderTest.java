@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.tuan.docreel.common.ProcessFailedException;
@@ -26,10 +28,88 @@ class EdgeTtsProviderTest {
     Path root;
 
     private EdgeTtsProvider provider(ProcessRunner runner, long pauseMs) {
+        return provider(runner, pauseMs, 1);
+    }
+
+    private EdgeTtsProvider provider(ProcessRunner runner, long pauseMs, int attempts) {
         return new EdgeTtsProvider(
                 runner,
                 VoiceFixtures.props(root, URI.create("http://localhost:1"), "", "edge-tts", pauseMs),
-                Duration.ofSeconds(5));
+                Duration.ofSeconds(5),
+                attempts,
+                Duration.ZERO);
+    }
+
+    private static ProcessFailedException noAudio() {
+        return new ProcessFailedException(
+                List.of("edge-tts"),
+                new ProcessResult(
+                        1,
+                        "",
+                        "Traceback (most recent call last):\n  ...\nedge_tts.exceptions.NoAudioReceived: No audio was"
+                                + " received.",
+                        Duration.ZERO));
+    }
+
+    private static Object writeAudio(org.mockito.invocation.InvocationOnMock inv) throws Exception {
+        ProcessRequest req = inv.getArgument(0);
+        Files.write(Path.of(after(req.command(), "--write-media")), new byte[] {7});
+        return new ProcessResult(0, "", "", Duration.ZERO);
+    }
+
+    @Test
+    void retriesNoAudioReceivedUntilServiceAnswers() {
+        ProcessRunner runner = mock(ProcessRunner.class);
+        when(runner.run(any())).thenThrow(noAudio()).thenThrow(noAudio()).thenAnswer(EdgeTtsProviderTest::writeAudio);
+
+        byte[] audio = provider(runner, 0, 4).synthesize("tôi dùng React", null, null, VoiceFixtures.settings());
+
+        assertThat(audio).containsExactly(7);
+        verify(runner, times(3)).run(any());
+    }
+
+    @Test
+    void retriesEmptyOutputFile() {
+        ProcessRunner runner = mock(ProcessRunner.class);
+        when(runner.run(any()))
+                .thenAnswer(inv -> {
+                    ProcessRequest req = inv.getArgument(0);
+                    Files.write(Path.of(after(req.command(), "--write-media")), new byte[0]);
+                    return new ProcessResult(0, "", "", Duration.ZERO);
+                })
+                .thenAnswer(EdgeTtsProviderTest::writeAudio);
+
+        assertThat(provider(runner, 0, 2).synthesize("x", null, null, VoiceFixtures.settings()))
+                .containsExactly(7);
+        verify(runner, times(2)).run(any());
+    }
+
+    @Test
+    void givesUpAfterMaxAttemptsWithTtsUnavailable() {
+        ProcessRunner runner = mock(ProcessRunner.class);
+        when(runner.run(any())).thenThrow(noAudio());
+
+        assertThatThrownBy(() -> provider(runner, 0, 3).synthesize("x", null, null, VoiceFixtures.settings()))
+                .isInstanceOf(TtsUnavailableException.class)
+                .hasMessageContaining("NoAudioReceived");
+        verify(runner, times(3)).run(any());
+    }
+
+    @Test
+    void timeoutAndMissingCommandAreNotRetried() {
+        ProcessRunner hang = mock(ProcessRunner.class);
+        when(hang.run(any()))
+                .thenThrow(new com.tuan.docreel.common.ProcessTimeoutException(
+                        List.of("edge-tts"), Duration.ofSeconds(5), 1L, "", ""));
+        assertThatThrownBy(() -> provider(hang, 0, 4).synthesize("x", null, null, VoiceFixtures.settings()))
+                .isInstanceOf(TtsUnavailableException.class);
+        verify(hang, times(1)).run(any());
+
+        ProcessRunner missing = mock(ProcessRunner.class);
+        when(missing.run(any())).thenThrow(new java.io.UncheckedIOException(new java.io.IOException("không có")));
+        assertThatThrownBy(() -> provider(missing, 0, 4).synthesize("x", null, null, VoiceFixtures.settings()))
+                .isInstanceOf(TtsUnavailableException.class);
+        verify(missing, times(1)).run(any());
     }
 
     private static String after(List<String> cmd, String flag) {

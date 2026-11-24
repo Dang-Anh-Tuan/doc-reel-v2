@@ -23,7 +23,7 @@ class TtsEdgeFailureIT {
     private TtsService service(ProcessRunner runner, Duration timeout) {
         AppProperties props = VoiceFixtures.props(root, URI.create("http://localhost:1"), "", "edge-tts", 0);
         TtsProvider eleven = new ElevenLabsProvider(props); // không key → luôn rơi xuống edge
-        TtsProvider edge = new EdgeTtsProvider(runner, props, timeout);
+        TtsProvider edge = new EdgeTtsProvider(runner, props, timeout, 2, Duration.ZERO); // thử lại vẫn hỏng
         return new TtsService(
                 List.of(eleven, edge),
                 new Lexicon(root.resolve("none.yaml"), false),
