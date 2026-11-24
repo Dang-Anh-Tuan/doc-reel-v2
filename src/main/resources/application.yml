@@ -46,7 +46,9 @@ docreel:
   self-check:
     interval: PT15M                 # chạy lại self-check định kỳ (PLAN 2.6)
   tts:
-    primary: elevenlabs
+    # Tạm dùng edge-tts làm chính: giọng Ngọc Anh (Voice Library) trả 402 với gói ElevenLabs Free.
+    # Nâng gói ElevenLabs (Starter+) thì đổi lại primary: elevenlabs.
+    primary: edge
     fallback: edge
     elevenlabs:
       api-key: ${ELEVENLABS_API_KEY:}
