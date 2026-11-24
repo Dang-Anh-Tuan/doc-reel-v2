@@ -81,7 +81,7 @@ export function JobsPage() {
               {filter === "ALL" ? "Chưa có job nào." : `Không có job ở trạng thái “${STATE_META[filter].label}”.`}
             </p>
           )}
-          {data && data.items.length > 0 && <JobsTable jobs={data.items} />}
+          {data && data.items.length > 0 && <JobsTable jobs={data.items} onRetried={refresh} />}
         </Panel>
       </div>
     </>

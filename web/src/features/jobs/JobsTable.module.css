@@ -30,6 +30,16 @@
   background: var(--surface-2);
 }
 
+.row {
+  cursor: pointer;
+}
+
+.stateCell {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+}
+
 .table tr[data-state="FAILED"] td:first-child {
   box-shadow: inset 2px 0 0 var(--bad);
 }

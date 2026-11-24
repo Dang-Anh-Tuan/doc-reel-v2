@@ -1,11 +1,29 @@
-import { Link } from "react-router";
+import type { MouseEvent } from "react";
+import { Link, useNavigate } from "react-router";
 import type { JobSummary } from "@/domain/job";
 import { JobStateBadge } from "./JobStateBadge";
 import styles from "./JobsTable.module.css";
 import { formatTime, stepLabel } from "./model";
+import { RetryButton } from "./RetryButton";
 
-/** Bảng job: topic, tiêu đề (link chi tiết), trạng thái, bước hiện tại, giọng, thời gian, YouTube. */
-export function JobsTable({ jobs }: { jobs: readonly JobSummary[] }) {
+interface JobsTableProps {
+  jobs: readonly JobSummary[];
+  /** Gọi sau khi Retry một job FAILED ngay trên bảng — trang cha tải lại danh sách. */
+  onRetried?: () => void;
+}
+
+/**
+ * Bảng job: topic, tiêu đề (link chi tiết), trạng thái (+ Retry khi FAILED), bước hiện tại, giọng, thời gian, YouTube.
+ * Bấm vào bất kỳ chỗ nào trên dòng → mở chi tiết (trừ khi bấm vào link / nút / đang bôi chọn chữ).
+ */
+export function JobsTable({ jobs, onRetried }: JobsTableProps) {
+  const navigate = useNavigate();
+  const openRow = (e: MouseEvent<HTMLTableRowElement>, id: string) => {
+    if ((e.target as HTMLElement).closest("a, button")) return;
+    if (window.getSelection()?.toString()) return;
+    void navigate(`/jobs/${id}`);
+  };
+
   return (
     <div className={styles.scroll}>
       <table className={styles.table}>
@@ -23,7 +41,7 @@ export function JobsTable({ jobs }: { jobs: readonly JobSummary[] }) {
         </thead>
         <tbody>
           {jobs.map((j) => (
-            <tr key={j.id} data-state={j.state}>
+            <tr key={j.id} data-state={j.state} className={styles.row} onClick={(e) => openRow(e, j.id)}>
               <td className={styles.mono}>
                 {j.topicId}
                 <span className={styles.faint}> v{j.scriptVersion}</span>
@@ -38,8 +56,9 @@ export function JobsTable({ jobs }: { jobs: readonly JobSummary[] }) {
                   </span>
                 )}
               </td>
-              <td>
+              <td className={styles.stateCell}>
                 <JobStateBadge state={j.state} />
+                <RetryButton jobId={j.id} state={j.state} onRetried={onRetried} />
               </td>
               <td>{j.state === "UPLOADED" ? "Xong" : stepLabel(j.currentStep)}</td>
               <td className={styles.mono}>{j.ttsProvider ?? "—"}</td>
