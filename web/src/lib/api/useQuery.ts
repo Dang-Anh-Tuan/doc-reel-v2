@@ -39,12 +39,14 @@ export function useQuery<T>(
   const [tick, setTick] = useState(0);
   const fetcherRef = useRef(fetcher);
   const refreshRef = useRef(options.refreshSeconds);
+  const stateRef = useRef(state);
   // Dạng hàm: không đưa vào deps (hàm mới mỗi render) — chỉ đọc qua ref lúc hẹn giờ
   const refreshDep = typeof options.refreshSeconds === "function" ? "fn" : options.refreshSeconds;
 
   useEffect(() => {
     fetcherRef.current = fetcher;
     refreshRef.current = options.refreshSeconds;
+    stateRef.current = state;
   });
 
   useEffect(() => {
@@ -52,7 +54,8 @@ export function useQuery<T>(
     let active = true;
     let controller: AbortController | undefined;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    let lastData: T | undefined;
+    // Data mới nhất của đúng key (kể cả từ trước khi refresh()) → lần tải lỗi vẫn tính được lịch làm mới
+    let lastData: T | undefined = stateRef.current.key === key ? stateRef.current.data : undefined;
 
     const run = async () => {
       controller = new AbortController();

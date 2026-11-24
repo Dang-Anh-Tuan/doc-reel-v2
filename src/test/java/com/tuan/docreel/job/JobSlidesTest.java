@@ -132,4 +132,15 @@ class JobSlidesTest {
                 new String(JSON.writeValueAsBytes(JobFixtures.sampleScript())).replace("\"s01-title\"", "\"../x\"");
         assertThat(new ScriptParser().parse(json.getBytes()).isOk()).isFalse();
     }
+
+    @Test
+    void invalidPathCharacterInSceneIdIsEmptyNotError() throws Exception {
+        VideoJob job = jobWithScript("{\"scenes\":[{\"type\":\"title\",\"id\":\"bad\\u0000name\"}]}");
+        Files.createDirectories(work.resolve(job.getId().toString()));
+
+        assertThat(JobSlides.imageNames(slides.script(job).orElseThrow())).containsExactly("bad\u0000name.png");
+        assertThat(slides.find(job, "1")).isEmpty();
+        assertThat(slides.rendered(job.getId(), slides.script(job).orElseThrow()))
+                .isEmpty();
+    }
 }

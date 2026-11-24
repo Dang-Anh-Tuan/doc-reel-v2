@@ -228,4 +228,29 @@ describe("useQuery", () => {
     expect(fetcher).toHaveBeenCalledTimes(4);
     unmount();
   });
+
+  it("refreshSeconds dạng hàm: lỗi giữa chừng không làm dừng poll khi data cũ còn chạy", async () => {
+    const boom = new ApiError({ kind: "network", status: null, title: "Mất kết nối", detail: "x" });
+    const fetcher = vi
+      .fn<(s: AbortSignal) => Promise<string>>()
+      .mockResolvedValueOnce("RUNNING")
+      .mockRejectedValueOnce(boom)
+      .mockResolvedValueOnce("RUNNING");
+    const { result, unmount } = renderQuery("job", fetcher, {
+      refreshSeconds: (d) => (d === "RUNNING" ? 5 : 0),
+    });
+    await flush();
+    // refresh() tạo effect mới; lần tải đầu của nó lỗi
+    act(() => result.current?.refresh());
+    await flush();
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    expect(result.current?.error).toBe(boom);
+    expect(result.current?.data).toBe("RUNNING");
+
+    await advance(5000);
+    expect(fetcher).toHaveBeenCalledTimes(3);
+    expect(result.current?.error).toBeUndefined();
+    unmount();
+  });
 });
+

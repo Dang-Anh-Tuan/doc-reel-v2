@@ -6,6 +6,7 @@ import com.tuan.docreel.script.Scene;
 import com.tuan.docreel.script.VideoScript;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -100,7 +101,13 @@ public class JobSlides {
 
     private Optional<Path> resolve(UUID jobId, String name) {
         Path dir = workRoot.resolve(jobId.toString()).normalize();
-        Path file = dir.resolve(name).normalize();
+        Path file;
+        try {
+            file = dir.resolve(name).normalize();
+        } catch (InvalidPathException e) {
+            // Tên scene có ký tự hệ điều hành không chấp nhận (vd NUL) → coi như không có slide
+            return Optional.empty();
+        }
         if (!dir.equals(file.getParent()) || !file.getFileName().toString().endsWith(PNG)) {
             return Optional.empty();
         }
