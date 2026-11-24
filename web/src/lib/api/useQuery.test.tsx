@@ -12,7 +12,7 @@ declare global {
 function renderQuery<T>(
   key: string | null,
   fetcher: (signal: AbortSignal) => Promise<T>,
-  options?: QueryOptions,
+  options?: QueryOptions<T>,
 ) {
   const latest: { current: QueryResult<T> | undefined } = { current: undefined };
   function Probe() {
@@ -141,4 +141,116 @@ describe("useQuery", () => {
     expect(result.current?.loading).toBe(false);
     unmount();
   });
+
+  it("đổi key → không trả data của key cũ, rồi tải data mới", async () => {
+    const pending: Record<string, (v: string) => void> = {};
+    const fetcher = vi.fn(
+      (signal: AbortSignal) =>
+        new Promise<string>((resolve) => {
+          void signal;
+          pending[currentKey] = resolve;
+        }),
+    );
+    let currentKey = "job-1";
+    const seen: Array<string | undefined> = [];
+    const latest: { current: QueryResult<string> | undefined } = { current: undefined };
+    function Probe({ k }: { k: string }) {
+      latest.current = useQuery(k, fetcher);
+      seen.push(latest.current.data);
+      return null;
+    }
+    const container = document.createElement("div");
+    let root: Root | undefined;
+    act(() => {
+      root = createRoot(container);
+      root.render(<Probe k="job-1" />);
+    });
+    await act(async () => pending["job-1"]?.("dữ liệu job 1"));
+    expect(latest.current?.data).toBe("dữ liệu job 1");
+
+    currentKey = "job-2";
+    seen.length = 0;
+    act(() => root?.render(<Probe k="job-2" />));
+
+    // Không render nào sau khi đổi key được thấy data của job 1
+    expect(seen).not.toContain("dữ liệu job 1");
+    expect(latest.current?.data).toBeUndefined();
+    expect(latest.current?.loading).toBe(true);
+
+    await act(async () => pending["job-2"]?.("dữ liệu job 2"));
+    expect(latest.current?.data).toBe("dữ liệu job 2");
+    expect(seen).not.toContain("dữ liệu job 1");
+    act(() => root?.unmount());
+  });
+
+  it("đổi key → bỏ lỗi của key cũ", async () => {
+    const boom = new ApiError({ kind: "http", status: 404, title: "Không tìm thấy job", detail: "" });
+    const fetcher = vi.fn<(s: AbortSignal) => Promise<string>>().mockRejectedValueOnce(boom).mockResolvedValueOnce("ok");
+    const latest: { current: QueryResult<string> | undefined } = { current: undefined };
+    function Probe({ k }: { k: string }) {
+      latest.current = useQuery(k, fetcher);
+      return null;
+    }
+    const container = document.createElement("div");
+    let root: Root | undefined;
+    act(() => {
+      root = createRoot(container);
+      root.render(<Probe k="a" />);
+    });
+    await flush();
+    expect(latest.current?.error).toBe(boom);
+
+    act(() => root?.render(<Probe k="b" />));
+    expect(latest.current?.error).toBeUndefined();
+    await flush();
+    expect(latest.current?.data).toBe("ok");
+    act(() => root?.unmount());
+  });
+
+  it("refreshSeconds dạng hàm: chỉ làm mới khi data còn yêu cầu", async () => {
+    const states = ["RUNNING", "RUNNING", "DONE"];
+    let n = 0;
+    const fetcher = vi.fn(async () => states[Math.min(n++, states.length - 1)]);
+    const { result, unmount } = renderQuery("job", fetcher, {
+      refreshSeconds: (d) => (d === "RUNNING" ? 5 : 0),
+    });
+    await flush();
+    await advance(5000);
+    await advance(5000);
+    expect(fetcher).toHaveBeenCalledTimes(3);
+    expect(result.current?.data).toBe("DONE");
+
+    await advance(60_000);
+    expect(fetcher).toHaveBeenCalledTimes(3);
+
+    act(() => result.current?.refresh());
+    await flush();
+    expect(fetcher).toHaveBeenCalledTimes(4);
+    unmount();
+  });
+
+  it("refreshSeconds dạng hàm: lỗi giữa chừng không làm dừng poll khi data cũ còn chạy", async () => {
+    const boom = new ApiError({ kind: "network", status: null, title: "Mất kết nối", detail: "x" });
+    const fetcher = vi
+      .fn<(s: AbortSignal) => Promise<string>>()
+      .mockResolvedValueOnce("RUNNING")
+      .mockRejectedValueOnce(boom)
+      .mockResolvedValueOnce("RUNNING");
+    const { result, unmount } = renderQuery("job", fetcher, {
+      refreshSeconds: (d) => (d === "RUNNING" ? 5 : 0),
+    });
+    await flush();
+    // refresh() tạo effect mới; lần tải đầu của nó lỗi
+    act(() => result.current?.refresh());
+    await flush();
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    expect(result.current?.error).toBe(boom);
+    expect(result.current?.data).toBe("RUNNING");
+
+    await advance(5000);
+    expect(fetcher).toHaveBeenCalledTimes(3);
+    expect(result.current?.error).toBeUndefined();
+    unmount();
+  });
 });
+

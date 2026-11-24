@@ -1,9 +1,9 @@
 package com.tuan.docreel.job;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -26,5 +26,5 @@ public interface JobRepository extends JpaRepository<VideoJob, UUID> {
                     FOR UPDATE SKIP LOCKED""", nativeQuery = true)
     Optional<VideoJob> claimNext(@Param("blocked") Collection<UUID> blocked);
 
-    List<VideoJob> findByState(JobState state, Pageable pageable);
+    Page<VideoJob> findByState(JobState state, Pageable pageable);
 }

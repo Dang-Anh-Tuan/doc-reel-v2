@@ -16,4 +16,10 @@ public enum JobStep {
     public JobState resultingState() {
         return resultingState;
     }
+
+    /** Bước chạy sau bước này; {@code null} nếu đây là bước cuối. */
+    public JobStep next() {
+        JobStep[] all = values();
+        return ordinal() + 1 < all.length ? all[ordinal() + 1] : null;
+    }
 }

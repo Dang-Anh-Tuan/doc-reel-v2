@@ -47,7 +47,9 @@ public class JobAttempt {
         this.outcome = outcome;
         this.durationMs = durationMs;
         this.error = error;
-        this.startedAt = Instant.now();
+        // Attempt được ghi khi bước đã xong → lùi lại đúng thời lượng để có thời điểm bắt đầu thật
+        Instant now = Instant.now();
+        this.startedAt = durationMs == null ? now : now.minusMillis(durationMs);
     }
 
     public Long getId() {
@@ -80,5 +82,10 @@ public class JobAttempt {
 
     public Instant getStartedAt() {
         return startedAt;
+    }
+
+    /** Thời điểm kết thúc = bắt đầu + thời lượng; {@code null} nếu không có thời lượng. */
+    public Instant getFinishedAt() {
+        return durationMs == null ? null : startedAt.plusMillis(durationMs);
     }
 }

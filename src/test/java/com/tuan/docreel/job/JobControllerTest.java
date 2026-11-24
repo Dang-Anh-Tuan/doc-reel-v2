@@ -35,7 +35,21 @@ class JobControllerTest {
     }
 
     private JobSummary summary(JobState state) {
-        return new JobSummary(id, "t1", 1, VideoType.SLIDES, state, null, null, null, Instant.now(), Instant.now());
+        return new JobSummary(
+                id,
+                "t1",
+                "Tiêu đề",
+                1,
+                VideoType.SLIDES,
+                state,
+                JobStep.RENDER,
+                null,
+                null,
+                "EDGE",
+                null,
+                null,
+                Instant.now(),
+                Instant.now());
     }
 
     @Test
@@ -78,10 +92,13 @@ class JobControllerTest {
 
     @Test
     void listReturns200AndFiltersByState() throws Exception {
-        when(service.list(JobState.FAILED)).thenReturn(List.of(summary(JobState.FAILED)));
+        when(service.list(JobState.FAILED, 0, JobApiService.MAX_PAGE_SIZE))
+                .thenReturn(new JobPage(List.of(summary(JobState.FAILED)), 1, 0, JobApiService.MAX_PAGE_SIZE));
         mvc.perform(get("/api/jobs").param("state", "FAILED"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].state").value("FAILED"));
+                .andExpect(header().string("X-Total-Count", "1"))
+                .andExpect(jsonPath("$[0].state").value("FAILED"))
+                .andExpect(jsonPath("$[0].currentStep").value("RENDER"));
     }
 
     @Test
@@ -95,9 +112,12 @@ class JobControllerTest {
                 .thenReturn(new JobDetail(
                         id,
                         "t1",
+                        "Tiêu đề",
                         1,
                         VideoType.SLIDES,
                         JobState.RECEIVED,
+                        JobStep.RENDER,
+                        null,
                         null,
                         null,
                         null,
@@ -106,6 +126,7 @@ class JobControllerTest {
                         null,
                         Instant.now(),
                         Instant.now(),
+                        List.of(),
                         List.of()));
         mvc.perform(get("/api/jobs/" + id))
                 .andExpect(status().isOk())

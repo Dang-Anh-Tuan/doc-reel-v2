@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { type ApiError, isAbortError, toApiError } from "./client";
 
-export interface QueryOptions {
-  /** Làm mới định kỳ: gọi lại sau N giây kể từ lần trước xong (không chồng request). 0/undefined → tắt. */
-  refreshSeconds?: number;
+export interface QueryOptions<T = unknown> {
+  /**
+   * Làm mới định kỳ: gọi lại sau N giây kể từ lần trước xong (không chồng request). 0/undefined → tắt.
+   * Dạng hàm: tính lại sau mỗi lần tải từ data mới nhất (vd chỉ làm mới khi job còn chạy).
+   */
+  refreshSeconds?: number | ((data: T | undefined) => number);
 }
 
 export interface QueryResult<T> {
@@ -16,27 +19,34 @@ export interface QueryResult<T> {
 }
 
 interface State<T> {
+  /** Key mà data/error thuộc về: key đổi → không trả data của key cũ (tránh hiện thoáng job trước). */
+  key: string | null;
   data: T | undefined;
   error: ApiError | undefined;
   loading: boolean;
 }
 
 /**
- * Hook tải dữ liệu nhỏ: `key` đổi → tải lại; `key = null` → không tải. Unmount hoặc đổi key → hủy request
+ * Hook tải dữ liệu nhỏ: `key` đổi → bỏ data/error của key cũ và tải lại; `key = null` → không tải. Unmount hoặc đổi key → hủy request
  * (AbortSignal) và dừng hẹn giờ làm mới.
  */
 export function useQuery<T>(
   key: string | null,
   fetcher: (signal: AbortSignal) => Promise<T>,
-  options: QueryOptions = {},
+  options: QueryOptions<T> = {},
 ): QueryResult<T> {
-  const [state, setState] = useState<State<T>>({ data: undefined, error: undefined, loading: key !== null });
+  const [state, setState] = useState<State<T>>({ key, data: undefined, error: undefined, loading: key !== null });
   const [tick, setTick] = useState(0);
   const fetcherRef = useRef(fetcher);
-  const { refreshSeconds } = options;
+  const refreshRef = useRef(options.refreshSeconds);
+  const stateRef = useRef(state);
+  // Dạng hàm: không đưa vào deps (hàm mới mỗi render) — chỉ đọc qua ref lúc hẹn giờ
+  const refreshDep = typeof options.refreshSeconds === "function" ? "fn" : options.refreshSeconds;
 
   useEffect(() => {
     fetcherRef.current = fetcher;
+    refreshRef.current = options.refreshSeconds;
+    stateRef.current = state;
   });
 
   useEffect(() => {
@@ -44,19 +54,28 @@ export function useQuery<T>(
     let active = true;
     let controller: AbortController | undefined;
     let timer: ReturnType<typeof setTimeout> | undefined;
+    // Data mới nhất của đúng key (kể cả từ trước khi refresh()) → lần tải lỗi vẫn tính được lịch làm mới
+    let lastData: T | undefined = stateRef.current.key === key ? stateRef.current.data : undefined;
 
     const run = async () => {
       controller = new AbortController();
-      setState((s) => (s.loading ? s : { ...s, loading: true }));
+      setState((s) =>
+        s.key !== key ? { key, data: undefined, error: undefined, loading: true } : s.loading ? s : { ...s, loading: true },
+      );
       try {
         const data = await fetcherRef.current(controller.signal);
-        if (active) setState({ data, error: undefined, loading: false });
+        if (!active) return;
+        lastData = data;
+        setState({ key, data, error: undefined, loading: false });
       } catch (e) {
         if (!active || isAbortError(e)) return;
-        setState((s) => ({ data: s.data, error: toApiError(e), loading: false }));
+        const error = toApiError(e);
+        setState((s) => ({ key, data: s.key === key ? s.data : undefined, error, loading: false }));
       }
-      if (active && refreshSeconds && refreshSeconds > 0) {
-        timer = setTimeout(() => void run(), refreshSeconds * 1000);
+      const rs = refreshRef.current;
+      const seconds = typeof rs === "function" ? rs(lastData) : rs;
+      if (active && seconds && seconds > 0) {
+        timer = setTimeout(() => void run(), seconds * 1000);
       }
     };
 
@@ -66,8 +85,10 @@ export function useQuery<T>(
       controller?.abort();
       clearTimeout(timer);
     };
-  }, [key, refreshSeconds, tick]);
+  }, [key, refreshDep, tick]);
 
   const refresh = useCallback(() => setTick((t) => t + 1), []);
-  return { ...state, refresh };
+  // Render ngay sau khi key đổi (trước khi effect chạy) vẫn còn state của key cũ → không trả ra
+  if (state.key !== key) return { data: undefined, error: undefined, loading: key !== null, refresh };
+  return { data: state.data, error: state.error, loading: state.loading, refresh };
 }

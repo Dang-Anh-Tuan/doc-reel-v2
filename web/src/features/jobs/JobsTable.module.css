@@ -1,0 +1,82 @@
+.scroll {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-strong);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.table tbody tr:hover {
+  background: var(--surface-2);
+}
+
+.table tr[data-state="FAILED"] td:first-child {
+  box-shadow: inset 2px 0 0 var(--bad);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.faint {
+  color: var(--text-faint);
+}
+
+.titleCell {
+  display: grid;
+  gap: 2px;
+  min-width: 220px;
+  max-width: 420px;
+}
+
+.title {
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: none;
+}
+.title:hover {
+  color: var(--accent-strong);
+  text-decoration: underline;
+}
+
+.error {
+  overflow: hidden;
+  color: var(--bad);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.time {
+  color: var(--text-muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.yt {
+  color: var(--accent-strong);
+  font-weight: 600;
+  white-space: nowrap;
+}
