@@ -205,7 +205,7 @@ samples/
 ### P2 · UC5 + trạng thái job · story 3 · **Tôi**
 **Kết quả:** `VideoJob` (JPA) với state machine an toàn + khóa idempotency.
 - `job.VideoJob` (`@Version`), `JobState` enum với `canTransitionTo()`, `JobStep`, `JobAttempt`.
-- `JobService.submit(script, origin) → SubmitResult {CREATED, DUPLICATE}`; unique `idempotency_key`; chụp `tts_settings` từ `TtsSettingsProvider` (MVP: `YamlTtsSettingsProvider`).
+- `JobService.submit(script, origin) → SubmitResult(Status {CREATED, DUPLICATE}, jobId)`; unique `idempotency_key` — trùng khóa luôn DUPLICATE kể cả job FAILED (muốn chạy lại thì dùng retry, P3/P4 gợi ý "dùng retry"); `origin` truyền vào ưu tiên hơn `script.origin()`, thiếu thì "api". Caller KHÔNG được bọc `submit` trong `@Transactional` (lỗi trùng khóa bắt ngoài transaction). Chụp `tts_settings` từ `TtsSettingsProvider` (MVP: `YamlTtsSettingsProvider`).
 
 | Test | Case |
 |---|---|
