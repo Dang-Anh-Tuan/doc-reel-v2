@@ -29,3 +29,4 @@ requests/
 # Worktree của subagent (orchestrator tạo)
 .worktrees/
 .claude/worktrees/
+data/youtube-token.enc
