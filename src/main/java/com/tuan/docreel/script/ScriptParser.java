@@ -19,6 +19,7 @@ import tools.jackson.databind.json.JsonMapper;
 public class ScriptParser {
 
     private static final String ROOT = "$";
+    private static final String DEFAULT_THEME = "midnight-brass";
     private static final String VALID_TYPES =
             "title, definition, points, steps, code, codeCompare, compare, table, quiz, summary";
 
@@ -67,7 +68,7 @@ public class ScriptParser {
                 s.title(),
                 s.version(),
                 s.videoType(),
-                s.theme(),
+                s.theme() == null ? DEFAULT_THEME : s.theme(),
                 s.sources(),
                 s.scenes(),
                 null);

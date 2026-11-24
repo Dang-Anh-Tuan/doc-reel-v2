@@ -56,6 +56,19 @@ class ScriptContentHashTest {
     }
 
     @Test
+    void treatsMissingThemeAsDefaultTheme() throws Exception {
+        ObjectNode withDefault = sample();
+        withDefault.put("theme", "midnight-brass");
+        ObjectNode withoutTheme = sample();
+        withoutTheme.remove("theme");
+        ObjectNode otherTheme = sample();
+        otherTheme.put("theme", "petrol-sage");
+
+        assertThat(hash(withoutTheme)).isEqualTo(hash(withDefault));
+        assertThat(hash(otherTheme)).isNotEqualTo(hash(withDefault));
+    }
+
+    @Test
     void producesSha256Hex() throws Exception {
         assertThat(hash(sample())).matches("[0-9a-f]{64}");
     }
