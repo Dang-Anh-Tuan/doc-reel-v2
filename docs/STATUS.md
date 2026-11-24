@@ -8,11 +8,11 @@
 | W1 | P6 render + gallery (G1) | ✅ merged (G1 duyệt) | phase/p6 | ĐẠT | ĐẠT | docs/explain/P6.md |
 | W1 | P9 | ✅ merged | phase/p9 | ĐẠT | ĐẠT | docs/explain/P9.md |
 | W2 | P2 | ✅ merged | phase/p2 | ĐẠT | ĐẠT | docs/explain/P2.md |
-| W2 | P8 | ⏳ | | | | |
+| W2 | P8 | ✅ merged | phase/p8 | ĐẠT | ĐẠT | docs/explain/P8.md |
 | W2 | P10 | ✅ merged | phase/p10 | ĐẠT | ĐẠT | docs/explain/P10.md |
 | — | P7 spike giọng (G2, người làm) | ⏳ | | | | |
-| W3 | P3 | ⏳ | | | | |
-| W3 | P4 | ⏳ | | | | |
+| W3 | P3 | ✅ merged | phase/p3 | ĐẠT | ĐẠT | docs/explain/P3.md |
+| W3 | P4 | 🔄 sửa theo review | phase/p4 | | | |
 | W4 | P5 | ⏳ | | | | |
 | W5 | P11 | ⏳ | | | | |
 
