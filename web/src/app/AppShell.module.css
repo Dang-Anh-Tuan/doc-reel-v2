@@ -70,11 +70,14 @@
   color: var(--text-faint);
 }
 
+.status {
+  margin-top: auto;
+}
+
 .footer {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: auto;
   padding: 0 8px;
   font-size: 12px;
   color: var(--text-faint);
@@ -112,6 +115,9 @@
   }
   .links {
     flex-direction: row;
+  }
+  .status {
+    margin: 0 0 0 auto;
   }
   .footer {
     display: none;

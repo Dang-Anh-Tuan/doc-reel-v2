@@ -23,12 +23,13 @@ web/
 ├── dev/docreelDevServer.ts      plugin Vite (chỉ dev): phục vụ /css /js /vendor /templates /samples
 │                                giống Spring + /__dev/samples + báo HMR khi file đổi
 ├── src/
-│   ├── app/                     router, AppShell (thanh điều hướng), PageHeader
+│   ├── app/                     router, AppShell (thanh điều hướng + thẻ Hệ thống), PageHeader
 │   ├── components/              UI dùng chung (Button, Select, Segmented, Toggle, Badge, Panel, Message), icon
 │   ├── domain/script.ts         kiểu kịch bản JSON (SPEC 9.1) — dùng chung preview + quản trị
 │   ├── lib/thymeleaf/           render template Thymeleaf trong trình duyệt (+ test)
+│   ├── lib/api/                 client.ts (fetch có kiểu, ProblemDetail → ApiError) + useQuery (tải, lỗi, làm mới định kỳ)
 │   ├── features/preview/        trang Template preview
-│   ├── features/jobs/           trang Jobs (bản 2)
+│   ├── features/jobs/           trang Jobs, chi tiết job (bản 2, P13 làm nội dung)
 │   └── styles/global.css        token giao diện
 └── vite.config.ts               alias @ → src, proxy /api → :8080, build → static/admin
 ```
