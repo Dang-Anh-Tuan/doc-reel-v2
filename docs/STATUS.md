@@ -14,7 +14,7 @@
 | W3 | P3 | ✅ merged | phase/p3 | ĐẠT | ĐẠT | docs/explain/P3.md |
 | W3 | P4 | ✅ merged | phase/p4 | ĐẠT | ĐẠT | docs/explain/P4.md |
 | W4 | P5 | ✅ merged | phase/p5 | ĐẠT | ĐẠT | docs/explain/P5.md |
-| W5 | P11 | 🔍 review | phase/p11 | ĐẠT (E2E, doctor) | | docs/explain/P11.md |
+| W5 | P11 | ✅ merged (chờ chạy thật G5) | phase/p11 | ĐẠT (-Media -E2E) | ĐẠT | docs/explain/P11.md |
 | B-W1 | P12 nền web quản trị | ✅ merged | phase/p12 | ĐẠT | ĐẠT | docs/explain/P12.md |
 | B-W2 | P13 jobs qua web | ✅ merged | phase/p13 | ĐẠT | ĐẠT | docs/explain/P13.md |
 

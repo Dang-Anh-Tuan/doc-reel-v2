@@ -19,6 +19,10 @@ spring:
 server:
   port: ${SERVER_PORT:8080}
 
+logging:
+  pattern:
+    level: "%5p [jobId=%X{jobId:-}]"   # NEEDS P11 #6: mỗi dòng log có jobId (MDC)
+
 management:
   endpoints:
     web:
