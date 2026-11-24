@@ -144,6 +144,17 @@ public class VideoJob {
         return state == JobState.RECEIVED && lastSuccessfulStep != null ? lastSuccessfulStep.resultingState() : state;
     }
 
+    /**
+     * Bước đang chạy / sẽ chạy (job FAILED: bước đã hỏng) = bước sau {@code lastSuccessfulStep}; {@code null} khi
+     * đã UPLOADED.
+     */
+    public JobStep currentStep() {
+        if (state == JobState.UPLOADED) {
+            return null;
+        }
+        return lastSuccessfulStep == null ? JobStep.RENDER : lastSuccessfulStep.next();
+    }
+
     /** Ghim provider TTS đã đọc xong video (retry giữ nguyên giọng). */
     public void pinTtsProvider(String provider) {
         this.ttsProvider = provider;

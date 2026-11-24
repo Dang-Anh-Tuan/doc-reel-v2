@@ -1,0 +1,10 @@
+.wrap {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+  max-width: 360px;
+}
+
+.detail {
+  margin: 4px 0 0;
+}

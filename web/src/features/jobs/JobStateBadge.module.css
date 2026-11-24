@@ -1,0 +1,47 @@
+.badge {
+  --tone: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 9px 2px 8px;
+  border: 1px solid color-mix(in srgb, var(--tone) 40%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tone) 12%, transparent);
+  color: var(--tone);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.badge[data-tone="running"] {
+  --tone: var(--accent);
+}
+.badge[data-tone="running"]::before {
+  animation: pulse 1.4s ease-in-out infinite;
+}
+.badge[data-tone="ok"] {
+  --tone: var(--ok);
+}
+.badge[data-tone="bad"] {
+  --tone: var(--bad);
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .badge[data-tone="running"]::before {
+    animation: none;
+  }
+}

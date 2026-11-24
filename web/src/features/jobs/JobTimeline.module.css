@@ -1,0 +1,92 @@
+.timeline {
+  position: relative;
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0 0 0 18px;
+  list-style: none;
+}
+
+.timeline::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 4px;
+  width: 1px;
+  background: var(--border-strong);
+}
+
+.item {
+  --tone: var(--text-faint);
+  position: relative;
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.item[data-outcome="SUCCESS"] {
+  --tone: var(--ok);
+}
+.item[data-outcome="RETRY"] {
+  --tone: var(--warn);
+}
+.item[data-outcome="FAILED"] {
+  --tone: var(--bad);
+}
+.item[data-outcome="RUNNING"] {
+  --tone: var(--accent);
+}
+
+.dot {
+  position: absolute;
+  top: 5px;
+  left: -18px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--tone);
+  box-shadow: 0 0 0 3px var(--surface);
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.step {
+  color: var(--text);
+  font-size: 13px;
+}
+
+.no,
+.meta {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.error {
+  margin: 2px 0 0;
+  padding: 8px 10px;
+  overflow-x: auto;
+  border: 1px solid color-mix(in srgb, var(--bad) 35%, var(--border));
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--bad) 8%, var(--surface-2));
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.empty {
+  margin: 0;
+  color: var(--text-muted);
+}

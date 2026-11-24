@@ -116,7 +116,14 @@ async function errorFromResponse(res: Response): Promise<ApiError> {
   });
 }
 
-export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
+/** Dữ liệu kèm header phản hồi (vd phân trang `X-Total-Count`). */
+export interface ApiResponse<T> {
+  data: T;
+  headers: Headers;
+}
+
+/** Như {@link apiFetch} nhưng trả thêm header của phản hồi. */
+export async function apiFetchWithHeaders<T>(path: string, options: RequestOptions = {}): Promise<ApiResponse<T>> {
   const { method = "GET", body, signal } = options;
   const headers: Record<string, string> = { Accept: "application/json, application/problem+json", ...options.headers };
   let payload: BodyInit | undefined;
@@ -144,10 +151,10 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
   }
 
   if (!res.ok) throw await errorFromResponse(res);
-  if (res.status === 204 || res.headers.get("Content-Length") === "0") return undefined as T;
-  if (!isJson(res)) return (await res.text()) as T;
+  if (res.status === 204 || res.headers.get("Content-Length") === "0") return { data: undefined as T, headers: res.headers };
+  if (!isJson(res)) return { data: (await res.text()) as T, headers: res.headers };
   try {
-    return (await res.json()) as T;
+    return { data: (await res.json()) as T, headers: res.headers };
   } catch (e) {
     throw new ApiError({
       kind: "unexpected",
@@ -157,6 +164,10 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
       cause: e,
     });
   }
+}
+
+export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  return (await apiFetchWithHeaders<T>(path, options)).data;
 }
 
 export const api = {
