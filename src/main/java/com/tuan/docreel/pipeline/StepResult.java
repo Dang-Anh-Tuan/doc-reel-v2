@@ -7,5 +7,11 @@ import com.tuan.docreel.job.JobState;
  *
  * @param nextState state job chuyển tới sau bước này
  * @param skipped true nếu output đã có sẵn nên không chạy lại (idempotent)
+ * @param ttsProvider provider TTS đã đọc (chỉ bước giọng điền); worker lưu vào {@code job.tts_provider}, null = không đổi
  */
-public record StepResult(JobState nextState, boolean skipped) {}
+public record StepResult(JobState nextState, boolean skipped, String ttsProvider) {
+
+    public StepResult(JobState nextState, boolean skipped) {
+        this(nextState, skipped, null);
+    }
+}

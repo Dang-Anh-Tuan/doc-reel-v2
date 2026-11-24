@@ -15,7 +15,7 @@ import tools.jackson.databind.json.JsonMapper;
 /**
  * Bước RENDERED → VOICED: audio từng scene + {@code subtitles.srt} trong {@code work/{jobId}/}. Giọng lấy từ
  * {@code job.tts_settings}, provider đã dùng (retry) từ {@code job.tts_provider}. Lưu {@link VoiceResult#provider()}
- * vào job là việc của P5 (voice không ghi thẳng entity).
+ * trả qua {@link StepResult#ttsProvider()}; {@code PipelineWorker} mới là nơi ghi vào job.
  */
 @Component
 public class VoiceStep implements Step {
@@ -48,8 +48,8 @@ public class VoiceStep implements Step {
             // Lúc tạo job, tts_provider = provider chính (ý định, chưa phải kết quả) → vẫn phải kiểm quota.
             // Chỉ khi khác provider chính (P5 đã ghi kết quả fallback) mới ghim để không đổi giọng.
             TtsProviderName pinned = stored == settings.primary() ? null : stored;
-            tts.voice(context.script(), context.workDir(), settings, pinned);
-            return new StepResult(JobState.VOICED, false);
+            VoiceResult result = tts.voice(context.script(), context.workDir(), settings, pinned);
+            return new StepResult(JobState.VOICED, false, result.provider().name());
         } finally {
             MDC.remove("jobId");
         }

@@ -1,9 +1,10 @@
 package com.tuan.docreel.render;
 
+import com.tuan.docreel.pipeline.RetryAdvice;
 import java.util.List;
 
 /** Slide tràn khung / vượt giới hạn (slide.js ghi {@code data-problems}). Lỗi nội dung → không retry. */
-public class SlideOverflowException extends RuntimeException {
+public class SlideOverflowException extends RuntimeException implements RetryAdvice {
 
     private static final long serialVersionUID = 1L;
 
@@ -12,6 +13,11 @@ public class SlideOverflowException extends RuntimeException {
     public SlideOverflowException(String sceneId, List<String> problems) {
         super("Slide '" + sceneId + "' bị tràn: " + String.join(", ", problems));
         this.problems = problems.toArray(new String[0]);
+    }
+
+    @Override
+    public boolean retryable() {
+        return false;
     }
 
     public List<String> problems() {

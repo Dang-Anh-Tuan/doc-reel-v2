@@ -1,9 +1,10 @@
 package com.tuan.docreel.voice;
 
+import com.tuan.docreel.pipeline.RetryAdvice;
 import java.io.Serial;
 
 /** Lỗi giọng đọc nói chung (cấu hình sai, API từ chối). Không nên retry nếu là loại này. */
-public class TtsException extends RuntimeException {
+public class TtsException extends RuntimeException implements RetryAdvice {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -14,5 +15,10 @@ public class TtsException extends RuntimeException {
 
     public TtsException(String message, Throwable cause) {
         super(message, cause);
+    }
+
+    @Override
+    public boolean retryable() {
+        return false;
     }
 }

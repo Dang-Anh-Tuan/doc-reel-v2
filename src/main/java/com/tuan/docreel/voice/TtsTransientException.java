@@ -15,4 +15,9 @@ public class TtsTransientException extends TtsException {
     public TtsTransientException(String message, Throwable cause) {
         super(message, cause);
     }
+
+    @Override
+    public boolean retryable() {
+        return true;
+    }
 }

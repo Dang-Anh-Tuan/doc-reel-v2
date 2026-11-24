@@ -35,3 +35,13 @@
 # NEEDS (P3)
 
 1. Merge: P3 thêm một dòng vào `job/JobRepository` (`findByState(JobState, Pageable)`); nếu P4/P5 cũng sửa file này thì giữ cả hai. Không cần sửa file dùng chung nào.
+
+# NEEDS (P5)
+
+1. `application.yml` (orchestrator, tùy chọn; đều có mặc định trong code): `docreel.pipeline.poll-interval: PT10S`, `docreel.pipeline.retry-backoff: PT30S,PT2M`. `PipelineScheduler` bị tắt ở profile `test` (`@Profile("!test")`) để IT khác không bị worker nhặt job; profile khác chạy bình thường.
+2. SPEC mục 9 / "bảng `video`" (orchestrator): MVP không có bảng `video` (thuộc bản 2, W6). P5 lưu `youtube_id` vào cột `video_job.youtube_id` (đọc `work/{jobId}/youtube-id.txt` lúc hoàn tất bước upload). `VideoUploadedEvent` vẫn được phát cho W6 / notifier, P5 không lắng nghe vì file id đã đủ và nằm trong cùng transaction với đổi state.
+3. Giới hạn upload/ngày (quota YouTube ~5-6 video/ngày với `videos.insert` = 1600 unit/10.000): SPEC chưa quy định hành vi khi chạm trần. P5 KHÔNG tự đặt luật: lỗi 403 quotaExceeded của YouTube coi là không retry → job FAILED, retry tay hôm sau. Cần orchestrator quyết định nếu muốn hàng đợi theo ngày (vd cột `not_before` hoặc đếm upload trong ngày).
+4. `PLAN.md` mục P5 ghi "ValidationException → FAILED ngay": thực tế phân loại bằng interface `pipeline.RetryAdvice` do từng exception tự khai báo (SlideOverflow, UnknownTheme, Tts* thường, YouTubeApi 4xx = không retry).
+5. Retry tự động lưu thời điểm chờ trong RAM (không có cột DB). Restart app giữa lúc chờ backoff → job được thử lại ngay; số lần vẫn đếm đúng từ `job_attempt` (outcome `RETRY`). Nếu cần bền hơn: thêm cột `video_job.retry_not_before` (migration V9xx, orchestrator duyệt).
+6. `JobApiService.retry` (P3) chưa phát `JobStateChangedEvent` (FAILED→RECEIVED); chỉ worker phát event. Thêm nếu muốn notifier thấy cả lần retry tay.
+7. Job FAILED: file `work/{jobId}/input.json` ở lại `work/` (chỉ UPLOADED mới chuyển sang `done/{jobId}-input.json`).

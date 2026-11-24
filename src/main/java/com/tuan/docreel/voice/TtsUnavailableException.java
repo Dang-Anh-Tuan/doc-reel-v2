@@ -17,4 +17,9 @@ public class TtsUnavailableException extends TtsException {
     public TtsUnavailableException(String message) {
         super(CODE + ": " + message);
     }
+
+    @Override
+    public boolean retryable() {
+        return true;
+    }
 }

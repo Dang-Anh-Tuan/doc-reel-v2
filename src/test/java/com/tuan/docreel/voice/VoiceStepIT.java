@@ -108,8 +108,10 @@ class VoiceStepIT {
                 (provider, chars) -> {});
 
         Path work = Files.createDirectories(root.resolve("work/job"));
-        new VoiceStep(tts, repository).execute(new StepContext(submitted.jobId(), JobState.RENDERED, script, work, 1));
+        var result = new VoiceStep(tts, repository)
+                .execute(new StepContext(submitted.jobId(), JobState.RENDERED, script, work, 1));
 
         assertThat(seenVoices).containsExactly("voice-OLD");
+        assertThat(result.ttsProvider()).isEqualTo("ELEVENLABS"); // P5 ghi vào job.tts_provider
     }
 }

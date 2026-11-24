@@ -128,6 +128,28 @@ public class VideoJob {
         this.youtubeId = youtubeId;
     }
 
+    /**
+     * Job vừa retry (RECEIVED nhưng đã có bước xong) → đưa state về điểm đã dừng để chạy tiếp từ bước lỗi. Không
+     * qua kiểm tra chuyển trạng thái vì đây là "nhập lại pipeline", không phải một bước mới.
+     */
+    public void resume() {
+        if (state == JobState.RECEIVED && lastSuccessfulStep != null) {
+            this.state = lastSuccessfulStep.resultingState();
+            this.updatedAt = Instant.now();
+        }
+    }
+
+    /** State mà pipeline coi là hiện tại: job retry (RECEIVED + bước đã xong) tiếp tục từ sau bước đó. */
+    public JobState pipelineState() {
+        return state == JobState.RECEIVED && lastSuccessfulStep != null ? lastSuccessfulStep.resultingState() : state;
+    }
+
+    /** Ghim provider TTS đã đọc xong video (retry giữ nguyên giọng). */
+    public void pinTtsProvider(String provider) {
+        this.ttsProvider = provider;
+        this.updatedAt = Instant.now();
+    }
+
     private void transitionTo(JobState next) {
         if (!state.canTransitionTo(next)) {
             throw new IllegalStateTransitionException(state, next);
