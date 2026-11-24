@@ -63,6 +63,7 @@
 7. `scripts/check.ps1` (orchestrator, tùy chọn): `-Media -E2E` chạy test media 2 lần (`verify -Pmedia` rồi `verify -Pe2e` vốn đã gồm media). Khi có `-E2E` có thể bỏ bước `-Pmedia` để tiết kiệm ~4 phút.
 9. Môi trường máy mới (orchestrator / người): `web: test` trong `check.ps1` lỗi "Failed to start forks worker … undici/lib/interceptor/decompress.js: Cannot read properties of undefined (reading 'bind')" vì máy có Node v20.19.5 còn `undici@8.13.1` (qua jsdom 31) cần Node >= 22.19. Không liên quan P11 (không đổi `web/`). Sửa: cài Node 22 LTS (>= 22.19) hoặc khai báo `engines.node` trong `web/package.json` + ghi vào `scripts/setup`.
 10. `--doctor` trên console Windows: thêm `-Dstdout.encoding=UTF-8` (đã ghi trong DEPLOY.md và XML service) để tiếng Việt không thành `?`. `docs/RUN.md` / `scripts/run*` (orchestrator) nên dùng cùng cờ.
+11. Sửa ngoài phạm vi package (báo orchestrator): `pipeline/PipelineWorker.java` khôi phục MDC `jobId` sau `step.execute` (các Step `RenderStep`/`VoiceStep`/`AssembleStep`/`YouTubeUploadStep` tự `MDC.remove` trong `finally` làm log lỗi của worker mất jobId). Có test `PipelineWorkerIT.errorLogAfterStepKeepsJobIdEvenIfStepClearsMdc`. Gọn hơn về lâu dài: Step không tự quản MDC (worker đã đặt).
 8. Service chạy LocalSystem: `install-service.ps1` ghi đường dẫn tuyệt đối `java`, `FFMPEG_PATH`, `FFPROBE_PATH`, `DOCREEL_TTS_EDGE_COMMAND`, `PLAYWRIGHT_BROWSERS_PATH` vào XML lúc cài (công cụ cài theo user không nằm trong PATH của SYSTEM). Không cần sửa file dùng chung.
 
 # NEEDS (P12)

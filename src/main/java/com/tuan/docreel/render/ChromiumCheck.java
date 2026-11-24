@@ -45,7 +45,7 @@ public class ChromiumCheck implements SelfCheckItem {
             return CheckResult.ok(NAME, "mở được trang trống (Chromium " + opener.get() + ")");
         } catch (RuntimeException e) {
             String msg = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
-            String oneLine = msg.replaceAll("\s+", " ").trim();
+            String oneLine = msg.replaceAll("\\s+", " ").trim();
             if (oneLine.length() > 300) {
                 oneLine = oneLine.substring(0, 300) + "...";
             }

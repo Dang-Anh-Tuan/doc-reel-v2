@@ -17,11 +17,12 @@ class ChromiumCheckTest {
     @Test
     void criticalWithInstallHintWhenBrowserMissing() {
         var r = new ChromiumCheck(() -> {
-                    throw new IllegalStateException("Executable doesn't exist\nmore lines");
+                    throw new IllegalStateException("Executable doesn't exist\r\n\tat C:\\ms-playwright\n  more lines");
                 })
                 .check();
         assertThat(r.status()).isEqualTo(CheckStatus.CRITICAL);
-        assertThat(r.detail()).contains("Executable doesn't exist");
+        assertThat(r.detail()).contains("Executable doesn't exist at C:\\ms-playwright more lines");
+        assertThat(r.detail()).doesNotContain("\n").doesNotContain("\r").doesNotContain("\t");
         assertThat(r.fix()).contains("playwright install chromium");
     }
 }

@@ -104,15 +104,8 @@ if (Test-Path $envTarget) {
     icacls $envTarget /inheritance:r /grant:r 'Administrators:F' 'SYSTEM:F' "$($env:USERNAME):R" | Out-Null
 }
 
-# Tác vụ dọn log hằng ngày 03:00: xóa log cũ hơn $LogDays ngày (WinSW không tự xóa)
-$cleanup = "Get-ChildItem '$InstallDir\logs' -File | Where-Object { `$_.LastWriteTime -lt (Get-Date).AddDays(-$LogDays) } | Remove-Item -Force"
-$action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-NoProfile -WindowStyle Hidden -Command `"$cleanup`""
-$trigger = New-ScheduledTaskTrigger -Daily -At 3am
-Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -User 'SYSTEM' -RunLevel Highest -Force | Out-Null
-
-& $serviceExe install
-
-# Kiểm tra máy trước khi chạy: --doctor đọc đúng .env trong InstallDir
+# Kiểm tra máy TRƯỚC khi đăng ký service: --doctor đọc đúng .env trong InstallDir, cùng biến công cụ như service.
+# Có mục CRITICAL → không đăng ký service (tránh service tự chạy lúc khởi động máy rồi tạm dừng worker).
 Push-Location $InstallDir
 try {
     $env:DOCREEL_HOME = Join-Path $InstallDir 'data-root'
@@ -124,9 +117,20 @@ try {
     Pop-Location
 }
 if ($doctorExit -ne 0) {
-    Write-Warning '--doctor có mục CRITICAL: service đã đăng ký nhưng CHƯA start. Sửa theo hướng dẫn trong bảng rồi chạy: docreel-service.exe start'
+    Write-Warning "--doctor có mục CRITICAL: CHƯA đăng ký service, chưa tạo tác vụ dọn log. File đã chép vào $InstallDir. Sửa theo hướng dẫn trong bảng rồi chạy lại script này."
     exit 1
 }
 
+# Tác vụ dọn log hằng ngày 03:00: chỉ xóa file *.log cũ hơn $LogDays ngày (WinSW không tự xóa).
+# Đường dẫn nằm trong chuỗi nháy đơn của lệnh con → nhân đôi dấu ' trong tên thư mục.
+$logDir = (Join-Path $InstallDir 'logs').Replace("'", "''")
+$cleanup = "Get-ChildItem -LiteralPath '$logDir' -File -Filter '*.log' | Where-Object { `$_.LastWriteTime -lt (Get-Date).AddDays(-$LogDays) } | Remove-Item -Force"
+$action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-NoProfile -WindowStyle Hidden -Command `"$cleanup`""
+$trigger = New-ScheduledTaskTrigger -Daily -At 3am
+Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -User 'SYSTEM' -RunLevel Highest -Force | Out-Null
+
+& $serviceExe install
+if ($LASTEXITCODE -ne 0) { throw "WinSW install lỗi (mã $LASTEXITCODE)" }
 & $serviceExe start
+if ($LASTEXITCODE -ne 0) { throw "WinSW start lỗi (mã $LASTEXITCODE); xem $InstallDir\logs" }
 Write-Host "Đã cài và chạy service 'docreel' tại $InstallDir. Log: $InstallDir\logs (giữ $LogDays ngày)."

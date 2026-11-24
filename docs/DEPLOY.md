@@ -17,8 +17,8 @@ PowerShell quyền Administrator:
 ```
 powershell -NoProfile -ExecutionPolicy Bypass -File deploy\install-service.ps1 -WinSW C:\tools\WinSW-x64.exe
 ```
-Script: copy jar, `.env`, `config\` vào `C:\docreel`, đăng ký service `docreel` (tự chạy khi khởi động máy, tự restart khi chết),
-tạo tác vụ dọn log (giữ 14 ngày), chạy `--doctor`, rồi mới start. `.env` không bao giờ được in ra; app tự đọc `.env` trong thư mục chạy.
+Script: copy jar, `.env`, `config\` vào `C:\docreel`, chạy `--doctor` TRƯỚC (có mục CRITICAL → dừng, không đăng ký service),
+rồi tạo tác vụ dọn log (chỉ xóa `*.log` > 14 ngày), đăng ký service `docreel` (tự chạy khi khởi động máy, tự restart khi chết) và start. `.env` không bao giờ được in ra; app tự đọc `.env` trong thư mục chạy.
 Service chạy bằng LocalSystem (không có PATH / `%LOCALAPPDATA%` của người cài) nên script ghi vào XML đường dẫn tuyệt đối
 của `java`, `FFMPEG_PATH`, `FFPROBE_PATH`, `DOCREEL_TTS_EDGE_COMMAND` (edge-tts) và `PLAYWRIGHT_BROWSERS_PATH`
 (mặc định `%LOCALAPPDATA%\ms-playwright` của người cài). Cài thêm/đổi công cụ → chạy lại script.

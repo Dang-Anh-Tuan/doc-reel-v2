@@ -1,8 +1,10 @@
 package com.tuan.docreel.e2e;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
@@ -55,6 +57,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
  * UC1 đầu-cuối (PLAN 2.5, SPEC mục 13) với ffmpeg + Playwright/Chromium + Postgres thật; chỉ có edge-tts giả
@@ -78,6 +81,7 @@ class EndToEndIT {
     private static final Path INVALID = Path.of("samples", "invalid", "title-too-long.json");
     private static final Path TOKEN_FILE = Path.of("target", "test-data", "youtube-token.enc");
     private static final String SECOND_TOPIC = "R-98";
+    private static final String BROKEN_TOPIC = "R-97";
     private static final WireMockServer YOUTUBE =
             new WireMockServer(WireMockConfiguration.options().dynamicPort());
     private static final WireMockServer ELEVEN =
@@ -169,7 +173,14 @@ class EndToEndIT {
     @Autowired
     JdbcTemplate jdbc;
 
-    private final ListAppender<ILoggingEvent> logs = new ListAppender<>();
+    /** Chụp MDC ngay lúc ghi log (LoggingEvent đọc MDC lười, đọc sau khi worker xóa MDC sẽ rỗng). */
+    private final ListAppender<ILoggingEvent> logs = new ListAppender<>() {
+        @Override
+        protected void append(ILoggingEvent event) {
+            event.prepareForDeferredProcessing();
+            super.append(event);
+        }
+    };
 
     @AfterAll
     static void stopServer() {
@@ -236,16 +247,23 @@ class EndToEndIT {
                 .replaceFirst("\"topicId\"\\s*:\\s*\"R-08\"", "\"topicId\": \"" + SECOND_TOPIC + "\"");
         assertThat(second).contains(SECOND_TOPIC);
         Files.writeString(inboxDir.resolve("c-valid.json"), second, StandardCharsets.UTF_8);
+        // File qua validate nhưng hỏng lúc chạy: chữ W liền (rộng nhất, không ngắt) đúng giới hạn ký tự → slide tràn
+        Files.writeString(inboxDir.resolve("e-overflow.json"), overflowingScript(), StandardCharsets.UTF_8);
 
-        assertThat(inbox.scan()).isEqualTo(3);
+        assertThat(inbox.scan()).isEqualTo(4);
 
         List<VideoJob> created = jobs.findAll();
         assertThat(created)
-                .as("2 file hợp lệ thành 2 job, file lỗi không tạo job")
-                .hasSize(2);
+                .as("3 file qua validate thành 3 job, file sai ở ingest không tạo job")
+                .hasSize(3);
         assertThat(names(props.dirs().failed())).anyMatch(n -> n.startsWith("b-invalid.json"));
         assertThat(names(props.dirs().failed())).anyMatch(n -> n.endsWith(".error.txt"));
         assertThat(inboxDir).isEmptyDirectory();
+        VideoJob broken = created.stream()
+                .filter(j -> j.getTopicId().equals(BROKEN_TOPIC))
+                .findFirst()
+                .orElseThrow();
+        List<VideoJob> good = created.stream().filter(j -> j != broken).toList();
 
         long start = System.nanoTime();
         int steps = 0;
@@ -254,10 +272,22 @@ class EndToEndIT {
             assertThat(Duration.ofNanos(System.nanoTime() - start)).isLessThan(Duration.ofMinutes(10));
         }
         assertThat(steps)
-                .as("2 job × (RECEIVED→RENDERED→VOICED→ASSEMBLED→UPLOADED) = 8 bước")
-                .isEqualTo(8);
+                .as("2 job × 4 bước (RECEIVED→…→UPLOADED) + 1 bước RENDER lỗi của job tràn = 9")
+                .isEqualTo(9);
 
-        for (VideoJob each : created) {
+        // Job hỏng lúc chạy: FAILED ở RENDER, có lỗi, không làm hỏng 2 job kia
+        VideoJob failed = jobs.findById(broken.getId()).orElseThrow();
+        assertThat(failed.getState()).isEqualTo(JobState.FAILED);
+        assertThat(failed.getErrorMessage()).contains("tràn");
+        assertThat(failed.getYoutubeId()).isNull();
+        assertThat(jdbc.queryForList(
+                        "select step || ':' || attempt_no || ':' || outcome from job_attempt where job_id = ?"
+                                + " and error is not null",
+                        String.class,
+                        failed.getId()))
+                .containsExactly("RENDER:1:FAILED");
+
+        for (VideoJob each : good) {
             VideoJob job = jobs.findById(each.getId()).orElseThrow();
             assertThat(job.getState()).as("lỗi: %s", job.getErrorMessage()).isEqualTo(JobState.UPLOADED);
             assertThat(job.getYoutubeId()).isEqualTo(YOUTUBE_ID);
@@ -271,6 +301,10 @@ class EndToEndIT {
         }
 
         YOUTUBE.verify(2, postRequestedFor(urlPathEqualTo("/upload/youtube/v3/videos")));
+        YOUTUBE.verify(
+                2,
+                postRequestedFor(urlPathEqualTo("/upload/youtube/v3/videos"))
+                        .withRequestBody(matchingJsonPath("$.status.privacyStatus", equalTo("private"))));
         YOUTUBE.verify(2, postRequestedFor(urlPathEqualTo("/youtube/v3/playlistItems")));
         // ElevenLabs được thử (còn quota theo /subscription) nhưng từ chối quota_exceeded → không tính ký tự nào
         ELEVEN.verify(2, getRequestedFor(urlPathEqualTo("/v1/user/subscription")));
@@ -291,10 +325,31 @@ class EndToEndIT {
         // Thả lại cùng file → duplicate, không job mới, không upload thêm
         Files.copy(SAMPLE, inboxDir.resolve("d-again.json"));
         assertThat(inbox.scan()).isEqualTo(1);
-        assertThat(jobs.count()).isEqualTo(2);
+        assertThat(jobs.count()).isEqualTo(3);
         assertThat(names(props.dirs().duplicate())).anyMatch(n -> n.startsWith("d-again"));
         assertThat(worker.runOnce()).isFalse();
         YOUTUBE.verify(2, postRequestedFor(urlPathEqualTo("/upload/youtube/v3/videos")));
+    }
+
+    /**
+     * sample-all-scenes với topicId khác, accent tiêu đề và thuật ngữ định nghĩa toàn chữ "W" đúng giới hạn ký tự
+     * của validator: hợp lệ về dữ liệu nhưng không vừa khung khi render.
+     */
+    private static String overflowingScript() throws IOException {
+        ObjectNode root = (ObjectNode) new JsonMapper().readTree(Files.readString(SAMPLE, StandardCharsets.UTF_8));
+        root.put("topicId", BROKEN_TOPIC);
+        for (var scene : root.path("scenes")) {
+            ObjectNode s = (ObjectNode) scene;
+            switch (s.path("type").asString()) {
+                case "title" -> {
+                    s.put("accent", "W".repeat(24));
+                    s.put("titleRest", "WWWW");
+                }
+                case "definition" -> s.put("term", "W".repeat(20));
+                default -> {}
+            }
+        }
+        return root.toString();
     }
 
     /** Lịch sử attempt trong DB: đúng 4 bước, mỗi bước 1 lần SUCCESS, có thời lượng. */
@@ -382,9 +437,10 @@ class EndToEndIT {
     }
 
     /**
-     * Mỗi slide bắt đầu đúng lúc audio của nó: cách mốc cộng dồn audio +0,5s khung hình giống PNG của slide đó hơn
-     * PNG của slide trước, và -0,15s thì ngược lại (SSIM; scene-detect không dùng được vì các slide cùng nền tối
-     * khác nhau rất ít, điểm scene dưới 0,3).
+     * Mỗi slide bắt đầu đúng lúc audio của nó: tại mốc cộng dồn audio +2 frame, khung hình giống PNG của slide đó hơn
+     * PNG của slide trước; tại -2 frame thì ngược lại (SSIM). Lấy ±2 frame chứ không ±1 vì chuyển cảnh xfade trộn
+     * hai slide ngay quanh ranh giới, khung đúng mốc là ảnh lai. Scene-detect ({@code select=gt(scene,0.3)}) không
+     * dùng được vì các slide cùng nền tối khác nhau rất ít, điểm scene dưới 0,3.
      */
     private void assertSlideBoundaries(Path workDir, Path mp4) throws IOException {
         List<String> units = new ArrayList<>();
