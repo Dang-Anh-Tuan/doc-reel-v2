@@ -16,7 +16,7 @@
 | W4 | P5 | ✅ merged | phase/p5 | ĐẠT | ĐẠT | docs/explain/P5.md |
 | W5 | P11 | 🔍 review | phase/p11 | ĐẠT (E2E, doctor) | | docs/explain/P11.md |
 | B-W1 | P12 nền web quản trị | ✅ merged | phase/p12 | ĐẠT | ĐẠT | docs/explain/P12.md |
-| B-W2 | P13 jobs qua web | ⏳ đang làm | phase/p13 | | | |
+| B-W2 | P13 jobs qua web | ✅ merged | phase/p13 | ĐẠT | ĐẠT | docs/explain/P13.md |
 
 Cổng: G0 ✅ · G1 ✅ · G2 ✅ · G3 ✅ · G4 ✅ (token YouTube 2026-11-24) · G5 ⏳
 
