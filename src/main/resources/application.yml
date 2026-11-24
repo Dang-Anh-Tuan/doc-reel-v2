@@ -63,7 +63,7 @@ docreel:
   youtube:
     client-id: ${YOUTUBE_CLIENT_ID:}
     client-secret: ${YOUTUBE_CLIENT_SECRET:}
-    encryption-key: ${YOUTUBE_ENCRYPTION_KEY:}
+    encryption-key: ${YOUTUBE_TOKEN_ENCRYPTION_KEY:${YOUTUBE_ENCRYPTION_KEY:}}
     token-file: data/youtube-token.enc
     max-attempts: 3
     retry-backoff: PT2S
