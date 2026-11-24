@@ -64,3 +64,61 @@
 9. Môi trường máy mới (orchestrator / người): `web: test` trong `check.ps1` lỗi "Failed to start forks worker … undici/lib/interceptor/decompress.js: Cannot read properties of undefined (reading 'bind')" vì máy có Node v20.19.5 còn `undici@8.13.1` (qua jsdom 31) cần Node >= 22.19. Không liên quan P11 (không đổi `web/`). Sửa: cài Node 22 LTS (>= 22.19) hoặc khai báo `engines.node` trong `web/package.json` + ghi vào `scripts/setup`.
 10. `--doctor` trên console Windows: thêm `-Dstdout.encoding=UTF-8` (đã ghi trong DEPLOY.md và XML service) để tiếng Việt không thành `?`. `docs/RUN.md` / `scripts/run*` (orchestrator) nên dùng cùng cờ.
 8. Service chạy LocalSystem: `install-service.ps1` ghi đường dẫn tuyệt đối `java`, `FFMPEG_PATH`, `FFPROBE_PATH`, `DOCREEL_TTS_EDGE_COMMAND`, `PLAYWRIGHT_BROWSERS_PATH` vào XML lúc cài (công cụ cài theo user không nằm trong PATH của SYSTEM). Không cần sửa file dùng chung.
+
+# NEEDS (P12)
+
+1. `pom.xml` (orchestrator): thêm `frontend-maven-plugin` để `mvn package` tự build web vào `static/admin` (W1). Bỏ qua bằng `-Dskip.web`.
+   Phase là `generate-resources` (KHÔNG phải `prepare-package`): Vite ghi vào `src/main/resources/static/admin`, phải xong trước `process-resources` thì jar mới có web.
+   Plugin tự tải Node riêng vào `target/node` (đúng bản SPEC 7.1 yêu cầu, không phụ thuộc Node trên PATH).
+   ```xml
+   <!-- trong <properties> -->
+   <frontend-plugin.version>1.15.1</frontend-plugin.version>
+   <web.node.version>v22.22.0</web.node.version>
+   <skip.web>false</skip.web>
+
+   <!-- trong <build><plugins> -->
+   <plugin>
+       <groupId>com.github.eirslett</groupId>
+       <artifactId>frontend-maven-plugin</artifactId>
+       <version>${frontend-plugin.version}</version>
+       <configuration>
+           <workingDirectory>web</workingDirectory>
+           <installDirectory>target/node</installDirectory>
+           <nodeVersion>${web.node.version}</nodeVersion>
+           <skip>${skip.web}</skip>
+       </configuration>
+       <executions>
+           <execution>
+               <id>install-node-and-npm</id>
+               <phase>generate-resources</phase>
+               <goals>
+                   <goal>install-node-and-npm</goal>
+               </goals>
+           </execution>
+           <execution>
+               <id>npm-ci</id>
+               <phase>generate-resources</phase>
+               <goals>
+                   <goal>npm</goal>
+               </goals>
+               <configuration>
+                   <arguments>ci</arguments>
+               </configuration>
+           </execution>
+           <execution>
+               <id>npm-build</id>
+               <phase>generate-resources</phase>
+               <goals>
+                   <goal>npm</goal>
+               </goals>
+               <configuration>
+                   <arguments>run build</arguments>
+               </configuration>
+           </execution>
+       </executions>
+   </plugin>
+   ```
+   `AdminSpaIT` KHÔNG cần plugin: dùng fixture `src/test/resources/static/admin/index.html` (test-classes đứng trước classes trên classpath).
+2. `scripts/check.ps1` (orchestrator): sau khi thêm plugin, bước 2 nên chạy `mvnw verify -Dskip.web` vì bước 3 đã lint/test/build web — tránh `npm ci` + build 2 lần.
+3. Môi trường / `scripts/check.ps1`: Node mặc định của nvm trên máy là **v20.19.5**; với Node 20, `npm test` (vitest 5 + jsdom 31 + undici) **hỏng ngay khi khởi động worker** (`undici/lib/interceptor/decompress.js: Cannot read properties of undefined (reading 'bind')`), kể cả test cũ. SPEC 7.1 yêu cầu Node ≥ 22.22 (máy có sẵn `nvm` v22.22.0). Đề xuất: `nvm use 22.22.0`, và/hoặc check.ps1 kiểm `node -v` ≥ 22.22 trước bước web, báo rõ cách sửa. P12 chạy kiểm tra bằng cách thêm `%LOCALAPPDATA%\nvm\v22.22.0` vào đầu PATH của phiên, không đổi nvm toàn máy.
+4. `PLAN.md`/`SPEC.md` (tùy chọn): ghi `GET /api/system/check?refresh=true` (chạy lại các mục ngay); mặc định trả kết quả gần nhất (rẻ, web gọi mỗi 60 s).

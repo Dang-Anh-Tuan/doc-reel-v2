@@ -14,6 +14,10 @@
 | W3 | P3 | ✅ merged | phase/p3 | ĐẠT | ĐẠT | docs/explain/P3.md |
 | W3 | P4 | ✅ merged | phase/p4 | ĐẠT | ĐẠT | docs/explain/P4.md |
 | W4 | P5 | ✅ merged | phase/p5 | ĐẠT | ĐẠT | docs/explain/P5.md |
-| W5 | P11 | ⏳ | | | | |
+| W5 | P11 | 🔍 review | phase/p11 | ĐẠT (E2E, doctor) | | docs/explain/P11.md |
+| B-W1 | P12 nền web quản trị | ✅ merged | phase/p12 | ĐẠT | ĐẠT | docs/explain/P12.md |
+| B-W2 | P13 jobs qua web | ⏳ đang làm | phase/p13 | | | |
 
-Cổng: G0 ✅ · G1 ✅ · G2 ✅ · G3 ⏳ · G4 ⏳ · G5 ⏳
+Cổng: G0 ✅ · G1 ✅ · G2 ✅ · G3 ✅ · G4 ✅ (token YouTube 2026-11-24) · G5 ⏳
+
+Ghi chú môi trường: web cần Node ≥ 22.22 (`check.ps1` tự dùng `%LOCALAPPDATA%\nvm\v22.22.0`; `mvnw package` tự tải Node vào `target/node`).

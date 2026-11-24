@@ -36,6 +36,10 @@
         <coverage.other.minimum>0.60</coverage.other.minimum>
         <!-- Chỉ bỏ cổng coverage khi chạy một phần test (-Dtest / -Dit.test), xem profile bên dưới -->
         <jacoco.check.skip>false</jacoco.check.skip>
+        <!-- P12: build web/ vào static/admin khi package; bỏ qua bằng -Dskip.web -->
+        <frontend-plugin.version>1.15.1</frontend-plugin.version>
+        <web.node.version>v22.22.0</web.node.version>
+        <skip.web>false</skip.web>
     </properties>
 
     <dependencies>
@@ -334,6 +338,48 @@
                             <goal>integration-test</goal>
                             <goal>verify</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- P12: Vite ghi vào src/main/resources/static/admin nên phải chạy trước process-resources -->
+            <plugin>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <version>${frontend-plugin.version}</version>
+                <configuration>
+                    <workingDirectory>web</workingDirectory>
+                    <installDirectory>target/node</installDirectory>
+                    <nodeVersion>${web.node.version}</nodeVersion>
+                    <skip>${skip.web}</skip>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>install-node-and-npm</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <!-- install (không phải ci): ci xóa node_modules, trên Windows dễ EPERM khi IDE đang giữ file -->
+                        <id>npm-install</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>install --no-audit --no-fund</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>npm-build</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>run build</arguments>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
