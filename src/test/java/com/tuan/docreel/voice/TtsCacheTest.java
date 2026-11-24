@@ -26,7 +26,7 @@ class TtsCacheTest {
 
     @Test
     void providerVoiceKeysIncludeVoiceAndSpeed(@TempDir Path dir) {
-        TtsSettings s = new TtsSettings(
+        VoiceSettings s = new VoiceSettings(
                 TtsProviderName.ELEVENLABS, TtsProviderName.EDGE, "v1", 1.1, "vi-VN-HoaiMyNeural", "+10%");
         var props = TestAppProperties.withDirsUnder(dir);
         assertThat(new ElevenLabsProvider(props).voiceKey(s)).contains("v1").contains("1.1");

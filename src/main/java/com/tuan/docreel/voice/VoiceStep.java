@@ -1,22 +1,33 @@
 package com.tuan.docreel.voice;
 
+import com.tuan.docreel.common.AppProperties.TtsProviderName;
+import com.tuan.docreel.job.JobRepository;
 import com.tuan.docreel.job.JobState;
+import com.tuan.docreel.job.VideoJob;
 import com.tuan.docreel.pipeline.Step;
 import com.tuan.docreel.pipeline.StepContext;
 import com.tuan.docreel.pipeline.StepResult;
+import java.util.Locale;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.json.JsonMapper;
 
-/** Bước RENDERED → VOICED: audio từng scene + {@code subtitles.srt} trong {@code work/{jobId}/}. */
+/**
+ * Bước RENDERED → VOICED: audio từng scene + {@code subtitles.srt} trong {@code work/{jobId}/}. Giọng lấy từ
+ * {@code job.tts_settings}, provider đã dùng (retry) từ {@code job.tts_provider}. Lưu {@link VoiceResult#provider()}
+ * vào job là việc của P5 (voice không ghi thẳng entity).
+ */
 @Component
 public class VoiceStep implements Step {
 
-    private final TtsService tts;
-    private final TtsSettingsProvider settings;
+    private static final JsonMapper MAPPER = JsonMapper.builder().build();
 
-    public VoiceStep(TtsService tts, TtsSettingsProvider settings) {
+    private final TtsService tts;
+    private final JobRepository jobs;
+
+    public VoiceStep(TtsService tts, JobRepository jobs) {
         this.tts = tts;
-        this.settings = settings;
+        this.jobs = jobs;
     }
 
     @Override
@@ -28,8 +39,16 @@ public class VoiceStep implements Step {
     public StepResult execute(StepContext context) {
         MDC.put("jobId", context.jobId().toString());
         try {
-            // pinned = null: job.tts_provider chưa có entity (P2/P3); audio đã cache nên retry không tốn thêm quota
-            tts.voice(context.script(), context.workDir(), settings.forJob(context.jobId()), null);
+            VideoJob job = jobs.findById(context.jobId())
+                    .orElseThrow(() -> new IllegalStateException("Không thấy job " + context.jobId()));
+            VoiceSettings settings = VoiceSettings.fromJson(job.getTtsSettings(), MAPPER);
+            TtsProviderName stored = job.getTtsProvider() == null
+                    ? null
+                    : TtsProviderName.valueOf(job.getTtsProvider().toUpperCase(Locale.ROOT));
+            // Lúc tạo job, tts_provider = provider chính (ý định, chưa phải kết quả) → vẫn phải kiểm quota.
+            // Chỉ khi khác provider chính (P5 đã ghi kết quả fallback) mới ghim để không đổi giọng.
+            TtsProviderName pinned = stored == settings.primary() ? null : stored;
+            tts.voice(context.script(), context.workDir(), settings, pinned);
             return new StepResult(JobState.VOICED, false);
         } finally {
             MDC.remove("jobId");

@@ -35,8 +35,8 @@ final class VoiceFixtures {
                 new AppProperties.SelfCheck(Duration.ofMinutes(15)));
     }
 
-    static TtsSettings settings() {
-        return new TtsSettings(
+    static VoiceSettings settings() {
+        return new VoiceSettings(
                 TtsProviderName.ELEVENLABS, TtsProviderName.EDGE, "voice1", 1.0, "vi-VN-HoaiMyNeural", "+0%");
     }
 

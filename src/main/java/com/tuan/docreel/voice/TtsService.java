@@ -52,7 +52,7 @@ public class TtsService {
     /**
      * @param pinned provider job đã dùng ở lần trước (retry giữ nguyên); null = chọn mới
      */
-    public VoiceResult voice(VideoScript script, Path workDir, TtsSettings settings, TtsProviderName pinned) {
+    public VoiceResult voice(VideoScript script, Path workDir, VoiceSettings settings, TtsProviderName pinned) {
         List<Unit> units = units(script);
         long needed = units.stream()
                 .flatMap(u -> u.spoken().stream())
@@ -74,7 +74,7 @@ public class TtsService {
     }
 
     /** Còn đủ quota (≥ needed × 1.1, tính số nguyên) → provider chính; không thì dự phòng. */
-    TtsProvider choose(long needed, TtsSettings settings, TtsProviderName pinned) {
+    TtsProvider choose(long needed, VoiceSettings settings, TtsProviderName pinned) {
         if (pinned != null) {
             return provider(pinned);
         }
@@ -94,7 +94,7 @@ public class TtsService {
         return p;
     }
 
-    private VoiceResult render(List<Unit> units, Path workDir, TtsSettings settings, TtsProvider provider) {
+    private VoiceResult render(List<Unit> units, Path workDir, VoiceSettings settings, TtsProvider provider) {
         try {
             Files.createDirectories(workDir);
         } catch (IOException e) {
@@ -127,7 +127,7 @@ public class TtsService {
         return new VoiceResult(provider.name(), audios, srt);
     }
 
-    private Path sentenceAudio(Unit unit, int index, TtsSettings settings, TtsProvider provider) {
+    private Path sentenceAudio(Unit unit, int index, VoiceSettings settings, TtsProvider provider) {
         String sentence = unit.spoken().get(index);
         String key = TtsCache.key(provider.name(), provider.voiceKey(settings), sentence);
         var cached = cache.find(key);

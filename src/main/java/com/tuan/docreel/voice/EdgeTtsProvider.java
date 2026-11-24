@@ -60,12 +60,12 @@ public class EdgeTtsProvider implements TtsProvider {
     }
 
     @Override
-    public String voiceKey(TtsSettings settings) {
+    public String voiceKey(VoiceSettings settings) {
         return settings.edgeVoice() + "|" + settings.edgeRate();
     }
 
     @Override
-    public synchronized byte[] synthesize(String sentence, String previous, String next, TtsSettings settings) {
+    public synchronized byte[] synthesize(String sentence, String previous, String next, VoiceSettings settings) {
         pause();
         Path dir = null;
         try {

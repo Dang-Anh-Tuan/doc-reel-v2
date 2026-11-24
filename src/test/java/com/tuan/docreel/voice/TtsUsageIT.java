@@ -101,8 +101,8 @@ class TtsUsageIT {
                 new TtsCache(TestAppProperties.withDirsUnder(ROOT)),
                 new FakeAudioTool(),
                 tracker);
-        TtsSettings edgeOnly =
-                new TtsSettings(TtsProviderName.EDGE, TtsProviderName.EDGE, "v", 1.0, "vi-VN-HoaiMyNeural", "+0%");
+        VoiceSettings edgeOnly =
+                new VoiceSettings(TtsProviderName.EDGE, TtsProviderName.EDGE, "v", 1.0, "vi-VN-HoaiMyNeural", "+0%");
         var script = VoiceFixtures.script(VoiceFixtures.title("s01", "Câu một. Câu hai."));
 
         svc.voice(script, ROOT.resolve("work/j1"), edgeOnly, null);

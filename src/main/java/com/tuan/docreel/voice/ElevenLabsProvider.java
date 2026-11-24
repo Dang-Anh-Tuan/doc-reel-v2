@@ -57,12 +57,12 @@ public class ElevenLabsProvider implements TtsProvider {
     }
 
     @Override
-    public String voiceKey(TtsSettings settings) {
+    public String voiceKey(VoiceSettings settings) {
         return config.model() + "|" + settings.elevenVoiceId() + "|" + settings.elevenSpeed();
     }
 
     @Override
-    public byte[] synthesize(String sentence, String previous, String next, TtsSettings settings) {
+    public byte[] synthesize(String sentence, String previous, String next, VoiceSettings settings) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("text", sentence);
         body.put("model_id", config.model());

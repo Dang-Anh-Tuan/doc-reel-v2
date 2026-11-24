@@ -48,12 +48,12 @@ class TtsServiceTest {
         }
 
         @Override
-        public String voiceKey(TtsSettings settings) {
+        public String voiceKey(VoiceSettings settings) {
             return "stub";
         }
 
         @Override
-        public byte[] synthesize(String sentence, String previous, String next, TtsSettings settings) {
+        public byte[] synthesize(String sentence, String previous, String next, VoiceSettings settings) {
             received.add(sentence);
             return FakeAudioTool.audioFor(1, sentence);
         }
@@ -141,14 +141,14 @@ class TtsServiceTest {
     void quotaFailureOnFallbackIsRethrown() {
         TtsProvider quota = new StubProvider(TtsProviderName.EDGE, true, Long.MAX_VALUE) {
             @Override
-            public byte[] synthesize(String s, String p, String n, TtsSettings st) {
+            public byte[] synthesize(String s, String p, String n, VoiceSettings st) {
                 throw new TtsQuotaExceededException("hết");
             }
         };
         TtsService svc = service(emptyLexicon(), new RecordingUsage(), quota);
         var script = VoiceFixtures.script(VoiceFixtures.title("s01", "Một câu."));
-        TtsSettings edgeOnly =
-                new TtsSettings(TtsProviderName.EDGE, TtsProviderName.EDGE, "v", 1.0, "vi-VN-HoaiMyNeural", "+0%");
+        VoiceSettings edgeOnly =
+                new VoiceSettings(TtsProviderName.EDGE, TtsProviderName.EDGE, "v", 1.0, "vi-VN-HoaiMyNeural", "+0%");
         assertThatThrownBy(() -> svc.voice(script, root.resolve("work/j"), edgeOnly, null))
                 .isInstanceOf(TtsQuotaExceededException.class);
     }
@@ -158,8 +158,8 @@ class TtsServiceTest {
         StubProvider edge = new StubProvider(TtsProviderName.EDGE, true, Long.MAX_VALUE);
         TtsService svc = service(emptyLexicon(), new RecordingUsage(), edge);
         var script = VoiceFixtures.script(VoiceFixtures.title("s01", "   "));
-        TtsSettings edgeOnly =
-                new TtsSettings(TtsProviderName.EDGE, TtsProviderName.EDGE, "v", 1.0, "vi-VN-HoaiMyNeural", "+0%");
+        VoiceSettings edgeOnly =
+                new VoiceSettings(TtsProviderName.EDGE, TtsProviderName.EDGE, "v", 1.0, "vi-VN-HoaiMyNeural", "+0%");
         assertThatThrownBy(() -> svc.voice(script, root.resolve("work/j"), edgeOnly, null))
                 .isInstanceOf(TtsException.class);
     }

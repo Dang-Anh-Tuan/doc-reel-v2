@@ -14,7 +14,7 @@ public interface TtsProvider {
     long remainingChars();
 
     /** Phần của khóa cache đại diện cho giọng + tốc độ. */
-    String voiceKey(TtsSettings settings);
+    String voiceKey(VoiceSettings settings);
 
     /**
      * Đọc 1 câu → nội dung MP3.
@@ -25,5 +25,5 @@ public interface TtsProvider {
      * @throws TtsTransientException lỗi mạng / 5xx
      * @throws TtsUnavailableException công cụ dự phòng hỏng
      */
-    byte[] synthesize(String sentence, String previous, String next, TtsSettings settings);
+    byte[] synthesize(String sentence, String previous, String next, VoiceSettings settings);
 }
