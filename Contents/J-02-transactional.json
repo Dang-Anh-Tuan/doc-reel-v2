@@ -1,0 +1,186 @@
+{
+  "topicId": "J-02",
+  "track": "Spring",
+  "title": "@Transactional: proxy, rollback và propagation",
+  "version": 1,
+  "videoType": "SLIDES",
+  "theme": "slate-mustard",
+  "sources": [
+    "https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/annotations.html",
+    "https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/rolling-back.html"
+  ],
+  "scenes": [
+    {
+      "id": "s01-title",
+      "type": "title",
+      "chip": "Spring Data",
+      "accent": "@Transactional",
+      "titleRest": "không chạy?",
+      "hook": "Có annotation mà không rollback: 3 lý do hay gặp",
+      "narration": "Đã gắn Transactional mà dữ liệu vẫn không rollback? Có ba lý do rất hay gặp."
+    },
+    {
+      "id": "s02-definition",
+      "type": "definition",
+      "term": "@Transactional",
+      "expansion": "Transaction khai báo",
+      "definition": "Spring bọc bean bằng proxy: mở transaction trước khi gọi method, commit khi xong, rollback khi lỗi.",
+      "example": "@Transactional public void transfer(...)",
+      "narration": "Transactional là cách khai báo transaction. Spring bọc bean của bạn bằng một proxy, mở transaction trước khi gọi method, commit khi xong và rollback khi có lỗi."
+    },
+    {
+      "id": "s03-steps",
+      "type": "steps",
+      "accent": "Proxy",
+      "titleRest": "làm gì?",
+      "steps": [
+        "Client gọi bean, thực ra là proxy",
+        "Proxy mở transaction",
+        "Proxy gọi method thật của bạn",
+        "Xong thì commit, lỗi thì rollback"
+      ],
+      "narration": "Bạn tưởng đang gọi thẳng service, nhưng thực ra là gọi proxy. Proxy mở transaction, gọi method thật, rồi commit hoặc rollback."
+    },
+    {
+      "id": "s04-code",
+      "type": "code",
+      "accent": "Gọi nội bộ",
+      "titleRest": "bỏ qua proxy",
+      "file": "OrderService.java",
+      "lang": "java",
+      "code": "public void placeAll(List<Order> os) {\n  os.forEach(o -> place(o));\n}\n@Transactional\npublic void place(Order o) {\n  repo.save(o);\n  payment.charge(o);\n}",
+      "highlight": [
+        2
+      ],
+      "note": "this.place() không đi qua proxy → không có transaction",
+      "noteKind": "warn",
+      "narration": "Lý do thứ nhất: gọi method Transactional từ chính class đó. Lời gọi this dot place không đi qua proxy, nên không có transaction nào được mở."
+    },
+    {
+      "id": "s05-compare",
+      "type": "compare",
+      "accent": "Rollback",
+      "titleRest": "mặc định",
+      "left": {
+        "heading": "Có rollback",
+        "kind": "good",
+        "items": [
+          "RuntimeException",
+          "Error"
+        ]
+      },
+      "right": {
+        "heading": "Không rollback",
+        "kind": "bad",
+        "items": [
+          "Checked exception",
+          "Lỗi đã bị catch"
+        ]
+      },
+      "note": "Muốn rollback cả checked: rollbackFor = Exception.class",
+      "narration": "Lý do thứ hai: mặc định Spring chỉ rollback với RuntimeException và Error. Checked exception thì vẫn commit, trừ khi bạn khai báo rollbackFor."
+    },
+    {
+      "id": "s06-code-compare",
+      "type": "codeCompare",
+      "accent": "Nuốt lỗi",
+      "titleRest": "mất rollback",
+      "lang": "java",
+      "bad": {
+        "label": "Catch rồi bỏ qua",
+        "code": "try {\n  payment.charge(o);\n} catch (Exception e) {\n  log.error(\"fail\", e);\n}"
+      },
+      "good": {
+        "label": "Ném lại để rollback",
+        "code": "try {\n  payment.charge(o);\n} catch (PaymentException e) {\n  throw new OrderFailed(e);\n}"
+      },
+      "note": "Lỗi không ra khỏi method thì Spring không biết để rollback",
+      "narration": "Lý do thứ ba: bắt lỗi rồi chỉ ghi log. Lỗi không thoát ra khỏi method, nên proxy tưởng mọi thứ ổn và commit. Hãy ném lại một runtime exception."
+    },
+    {
+      "id": "s07-table",
+      "type": "table",
+      "accent": "Propagation",
+      "titleRest": "hay dùng",
+      "columns": [
+        "Kiểu",
+        "Đã có tx",
+        "Chưa có tx"
+      ],
+      "rows": [
+        [
+          "REQUIRED",
+          "Dùng chung",
+          "Mở tx mới"
+        ],
+        [
+          "REQUIRES_NEW",
+          "Treo cũ, mở mới",
+          "Mở tx mới"
+        ],
+        [
+          "MANDATORY",
+          "Dùng chung",
+          "Ném exception"
+        ],
+        [
+          "SUPPORTS",
+          "Dùng chung",
+          "Chạy không tx"
+        ]
+      ],
+      "narration": "Propagation mặc định là REQUIRED: có transaction thì dùng chung, chưa có thì mở mới. REQUIRES NEW luôn tạm dừng transaction cũ để mở một cái mới.",
+      "spoken": "Propagation mặc định là required: có transaction thì dùng chung, chưa có thì mở mới. Requires new luôn tạm dừng transaction cũ để mở một cái mới."
+    },
+    {
+      "id": "s08-points",
+      "type": "points",
+      "accent": "Mẹo",
+      "titleRest": "dùng đúng",
+      "points": [
+        {
+          "heading": "Đặt ở tầng service",
+          "detail": "Một use case là một transaction, gom nhiều repository"
+        },
+        {
+          "heading": "Gọi từ bean khác",
+          "detail": "Method public, gọi qua proxy; tránh gọi this.method()"
+        },
+        {
+          "heading": "readOnly khi chỉ đọc",
+          "detail": "@Transactional(readOnly = true) cho method chỉ truy vấn"
+        }
+      ],
+      "narration": "Đặt Transactional ở tầng service theo từng use case, gọi nó từ một bean khác để đi qua proxy, và dùng readOnly cho các method chỉ đọc."
+    },
+    {
+      "id": "s09-quiz",
+      "type": "quiz",
+      "question": "Method @Transactional ném IOException (checked). Mặc định Spring làm gì?",
+      "options": [
+        "Rollback",
+        "Commit",
+        "Thử lại 3 lần",
+        "Treo transaction"
+      ],
+      "answer": 1,
+      "explain": "Mặc định chỉ rollback RuntimeException và Error; checked thì vẫn commit.",
+      "narration": "Câu hỏi phỏng vấn: method Transactional ném IOException, một checked exception. Mặc định Spring sẽ làm gì?",
+      "revealNarration": "Đáp án B. Spring vẫn commit, vì mặc định chỉ rollback RuntimeException và Error."
+    },
+    {
+      "id": "s10-summary",
+      "type": "summary",
+      "accent": "Chốt",
+      "titleRest": "@Transactional",
+      "bullets": [
+        "Transaction chạy qua proxy",
+        "this.method() bỏ qua transaction",
+        "Mặc định rollback RuntimeException",
+        "Đừng nuốt lỗi trong try/catch"
+      ],
+      "outro": "Vì sao gọi nội bộ làm mất transaction?",
+      "narration": "Nhớ bốn điều này. Và tự trả lời: vì sao gọi method nội bộ lại làm mất transaction?"
+    }
+  ]
+}

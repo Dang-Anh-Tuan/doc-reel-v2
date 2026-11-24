@@ -1,0 +1,176 @@
+{
+  "topicId": "R-09",
+  "track": "React",
+  "title": "useEffect: deps, cleanup và khi nào không cần",
+  "version": 1,
+  "videoType": "SLIDES",
+  "theme": "petrol-sage",
+  "sources": [
+    "https://react.dev/reference/react/useEffect",
+    "https://react.dev/learn/you-might-not-need-an-effect"
+  ],
+  "scenes": [
+    {
+      "id": "s01-title",
+      "type": "title",
+      "chip": "React · Hooks",
+      "accent": "useEffect",
+      "titleRest": "chạy khi nào?",
+      "hook": "Effect không chạy trong render, mà sau khi commit",
+      "narration": "useEffect chạy lúc nào? Không phải trong lúc render, mà sau khi React đã cập nhật màn hình."
+    },
+    {
+      "id": "s02-definition",
+      "type": "definition",
+      "term": "useEffect",
+      "expansion": "Đồng bộ với hệ thống bên ngoài",
+      "definition": "Hook chạy code sau khi React commit lên màn hình, để đồng bộ component với thứ nằm ngoài React.",
+      "example": "useEffect(() => connect(roomId), [roomId])",
+      "narration": "useEffect dùng để đồng bộ component với thứ nằm ngoài React, như kết nối mạng, sự kiện của trình duyệt hay một thư viện khác."
+    },
+    {
+      "id": "s03-steps",
+      "type": "steps",
+      "accent": "Vòng đời",
+      "titleRest": "một effect",
+      "steps": [
+        "Render: React tính ra JSX mới",
+        "Commit: React cập nhật DOM",
+        "Trình duyệt vẽ lên màn hình",
+        "Chạy cleanup của effect lần trước",
+        "Chạy setup của effect mới"
+      ],
+      "narration": "Thứ tự là: render, commit, trình duyệt vẽ màn hình. Sau đó React chạy cleanup của lần trước, rồi mới chạy effect mới."
+    },
+    {
+      "id": "s04-table",
+      "type": "table",
+      "accent": "Dependency",
+      "titleRest": "array",
+      "columns": [
+        "Cách viết",
+        "Effect chạy khi"
+      ],
+      "rows": [
+        [
+          "Không có mảng",
+          "Sau mọi lần render"
+        ],
+        [
+          "[]",
+          "Chỉ sau mount"
+        ],
+        [
+          "[a, b]",
+          "Mount và a/b đổi"
+        ]
+      ],
+      "narration": "Không truyền mảng thì effect chạy sau mọi lần render. Mảng rỗng thì chỉ chạy sau lần mount. Có a và b thì chạy lại mỗi khi một trong hai thay đổi."
+    },
+    {
+      "id": "s05-code",
+      "type": "code",
+      "accent": "Cleanup",
+      "titleRest": "tránh rò rỉ",
+      "file": "ChatRoom.tsx",
+      "lang": "tsx",
+      "code": "useEffect(() => {\n  const conn = connect(roomId);\n  conn.open();\n  return () => {\n    conn.close();\n  };\n}, [roomId]);",
+      "highlight": [
+        4,
+        5
+      ],
+      "note": "Cleanup chạy trước effect mới và khi unmount",
+      "noteKind": "info",
+      "narration": "Hàm trả về từ effect là cleanup. Nó chạy trước khi effect chạy lại, và khi component bị gỡ khỏi màn hình, nên kết nối cũ luôn được đóng."
+    },
+    {
+      "id": "s06-code-compare",
+      "type": "codeCompare",
+      "accent": "Vòng lặp",
+      "titleRest": "vô hạn",
+      "lang": "tsx",
+      "bad": {
+        "label": "Set state, không deps",
+        "code": "const [n, setN] = useState(0);\nuseEffect(() => {\n  setN(n + 1);\n});"
+      },
+      "good": {
+        "label": "Có điều kiện + deps",
+        "code": "useEffect(() => {\n  if (ready) setN(c => c + 1);\n}, [ready]);"
+      },
+      "note": "Effect set state sau mọi render → render lại mãi",
+      "narration": "Effect không có mảng phụ thuộc mà lại set state sẽ gây render, render lại chạy effect, và cứ thế lặp vô hạn. Hãy thêm điều kiện và mảng phụ thuộc."
+    },
+    {
+      "id": "s07-compare",
+      "type": "compare",
+      "accent": "Có cần",
+      "titleRest": "effect không?",
+      "left": {
+        "heading": "Không cần",
+        "kind": "bad",
+        "items": [
+          "Tính từ props hoặc state",
+          "Xử lý click, submit",
+          "Lọc danh sách khi render"
+        ]
+      },
+      "right": {
+        "heading": "Cần effect",
+        "kind": "good",
+        "items": [
+          "Kết nối socket, chat",
+          "Đăng ký event của window",
+          "Đồng bộ widget bên ngoài"
+        ]
+      },
+      "note": "Effect là lối thoát ra ngoài React, không phải nơi tính toán",
+      "narration": "Dữ liệu tính được từ props hay state thì tính ngay khi render, xử lý click thì để trong event handler. Chỉ dùng effect khi cần đồng bộ với hệ thống bên ngoài."
+    },
+    {
+      "id": "s08-points",
+      "type": "points",
+      "accent": "StrictMode",
+      "titleRest": "chạy 2 lần?",
+      "points": [
+        {
+          "heading": "Chỉ ở môi trường dev",
+          "detail": "React chạy setup, cleanup, rồi setup lại để lộ lỗi thiếu cleanup"
+        },
+        {
+          "heading": "Không phải bug",
+          "detail": "Cleanup viết đúng thì người dùng không thấy khác biệt"
+        }
+      ],
+      "narration": "Ở chế độ dev với StrictMode, React cố ý chạy effect thêm một lần để bạn phát hiện thiếu cleanup. Bản production không bị như vậy."
+    },
+    {
+      "id": "s09-quiz",
+      "type": "quiz",
+      "question": "Effect có deps [roomId]. Khi roomId đổi, React làm gì trước tiên?",
+      "options": [
+        "Chạy setup mới ngay",
+        "Chạy cleanup với roomId cũ",
+        "Unmount component",
+        "Không làm gì cả"
+      ],
+      "answer": 1,
+      "explain": "Cleanup của lần trước chạy với giá trị cũ, sau đó setup mới chạy.",
+      "narration": "Câu hỏi phỏng vấn: khi roomId đổi, React làm gì trước tiên?",
+      "revealNarration": "Đáp án B. React chạy cleanup với roomId cũ, rồi mới chạy setup với roomId mới."
+    },
+    {
+      "id": "s10-summary",
+      "type": "summary",
+      "accent": "Chốt",
+      "titleRest": "useEffect",
+      "bullets": [
+        "Effect chạy sau khi commit",
+        "Deps quyết định khi nào chạy lại",
+        "Trả về cleanup khi mở tài nguyên",
+        "Tính được thì đừng dùng effect"
+      ],
+      "outro": "Khi nào KHÔNG nên dùng useEffect?",
+      "narration": "Nhớ bốn điều này. Và tự trả lời thử: khi nào không nên dùng useEffect?"
+    }
+  ]
+}
