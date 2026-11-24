@@ -112,3 +112,19 @@
 "Render": "Ren-đơ"
 "Callback": "Côn-bách"
 "Middleware": "Mít-đồ-goe"
+
+# ---------- Bổ sung 24/11/2026 (R-09) ----------
+# Giọng vi-VN của Microsoft hay trả NoAudioReceived khi câu còn từ tiếng Anh → mọi từ tiếng Anh trong lời đọc nên có ở đây.
+# Viết có gạch nối ("cờ-lin-ắp"): đo 6/6 thành công; tách bằng dấu cách chỉ 2/6.
+"Effect": "i-phéc"
+"Cleanup": "cờ-lin-ắp"
+"Commit": "com-mít"
+"Mount": "mao"
+"Unmount": "ăn-mao"
+"set": "xét"
+"click": "cờ-lích"
+"event handler": "i-ven hen-đơ-lơ"
+"dev": "đép"
+"StrictMode": "Xờ-trích Mốt"
+"production": "pờ-rô-đắc-sần"
+"roomId": "rum-ai-đi"

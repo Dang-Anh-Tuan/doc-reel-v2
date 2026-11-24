@@ -69,6 +69,25 @@ class EdgeTtsProviderTest {
     }
 
     @Test
+    void finalErrorIsOneShortLineNotPythonTraceback() {
+        ProcessRunner runner = mock(ProcessRunner.class);
+        when(runner.run(any())).thenThrow(noAudio());
+
+        assertThatThrownBy(() -> provider(runner, 0, 2).synthesize("x", null, null, VoiceFixtures.settings()))
+                .isInstanceOf(TtsUnavailableException.class)
+                .hasMessage("TTS_UNAVAILABLE: edge-tts: NoAudioReceived (Microsoft không trả audio) — đã thử 2 lần")
+                .hasRootCauseInstanceOf(ProcessFailedException.class); // traceback đầy đủ vẫn còn ở cause
+    }
+
+    @Test
+    void summarizeKeepsLastLineWithExitCode() {
+        assertThat(EdgeTtsProvider.summarize(1, "Traceback...\n  File x\nValueError: Invalid voice 'abc'."))
+                .isEqualTo("thoát mã 1: ValueError: Invalid voice 'abc'.");
+        assertThat(EdgeTtsProvider.summarize(3, "")).isEqualTo("thoát mã 3");
+        assertThat(EdgeTtsProvider.summarize(1, "x".repeat(500))).hasSize("thoát mã 1: ".length() + 201);
+    }
+
+    @Test
     void retriesEmptyOutputFile() {
         ProcessRunner runner = mock(ProcessRunner.class);
         when(runner.run(any()))

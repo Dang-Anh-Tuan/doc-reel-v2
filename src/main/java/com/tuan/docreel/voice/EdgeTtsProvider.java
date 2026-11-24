@@ -33,8 +33,10 @@ public class EdgeTtsProvider implements TtsProvider {
 
     private static final Logger log = LoggerFactory.getLogger(EdgeTtsProvider.class);
     private static final Duration DEFAULT_TIMEOUT = Duration.ofMinutes(1);
-    private static final int DEFAULT_ATTEMPTS = 6; // đo thực tế: có câu lỗi 3 lần liền rồi mới được
-    private static final Duration DEFAULT_BACKOFF = Duration.ofSeconds(2);
+    // Đo thực tế (11/2026): NoAudioReceived ngẫu nhiên 10–50% tùy lúc, nghỉ vài giây thường hết → 8 lần, chờ 3, 6, 9…
+    // s.
+    private static final int DEFAULT_ATTEMPTS = 8;
+    private static final Duration DEFAULT_BACKOFF = Duration.ofSeconds(3);
 
     private final ProcessRunner runner;
     private final AppProperties.Edge config;
@@ -89,13 +91,15 @@ public class EdgeTtsProvider implements TtsProvider {
                 return synthesizeOnce(sentence, settings);
             } catch (RetryableEdgeFailure e) {
                 if (attempt >= attempts) {
-                    throw e.failure;
+                    log.warn("edge-tts bỏ cuộc sau {} lần, lỗi cuối: {}", attempts, e.getMessage());
+                    throw new TtsUnavailableException(
+                            "edge-tts: " + e.getMessage() + " — đã thử " + attempts + " lần", e.failure);
                 }
                 log.warn(
                         "edge-tts lỗi lần {}/{} ({}), thử lại câu sau {} ms",
                         attempt,
                         attempts,
-                        lastLine(e.failure.getMessage()),
+                        e.getMessage(),
                         backoff.toMillis() * attempt);
                 sleep(backoff.multipliedBy(attempt));
             }
@@ -125,11 +129,17 @@ public class EdgeTtsProvider implements TtsProvider {
                     .withEnv("PYTHONUTF8", "1")
                     .withEnv("PYTHONIOENCODING", "utf-8"));
             if (!Files.exists(media) || Files.size(media) == 0) {
-                throw new RetryableEdgeFailure(new TtsUnavailableException("edge-tts không tạo ra audio (file rỗng)"));
+                throw new RetryableEdgeFailure(
+                        "không tạo ra audio (file rỗng)",
+                        new TtsUnavailableException("edge-tts không tạo ra audio (file rỗng)"));
             }
             return Files.readAllBytes(media);
         } catch (ProcessFailedException e) {
-            throw new RetryableEdgeFailure(new TtsUnavailableException("edge-tts lỗi: " + e.getMessage(), e));
+            // stderr là traceback Python dài → chỉ giữ dòng cuối (tên exception + lời nhắn) cho job; đủ chi tiết ở log
+            log.debug("edge-tts stderr đầy đủ:\n{}", e.stderr());
+            throw new RetryableEdgeFailure(
+                    summarize(e.exitCode(), e.stderr()),
+                    new TtsUnavailableException("edge-tts lỗi: " + e.getMessage(), e));
         } catch (ProcessTimeoutException | UncheckedIOException e) {
             throw new TtsUnavailableException("edge-tts lỗi: " + e.getMessage(), e);
         } catch (IOException e) {
@@ -168,14 +178,21 @@ public class EdgeTtsProvider implements TtsProvider {
         }
     }
 
-    /** Dòng cuối của thông báo lỗi (traceback Python: dòng cuối là tên exception + lời nhắn). */
-    private static String lastLine(String s) {
-        if (s == null) {
-            return "";
+    /**
+     * Tóm tắt stderr của edge-tts thành 1 dòng: dòng cuối traceback ({@code edge_tts.exceptions.NoAudioReceived: ...})
+     * → {@code NoAudioReceived (Microsoft không trả audio)}; lỗi khác: {@code thoát mã N: <dòng cuối, ≤ 200 ký tự>}.
+     */
+    static String summarize(int exitCode, String stderr) {
+        String s = stderr == null ? "" : stderr.strip();
+        int nl = s.lastIndexOf('\n');
+        String last = (nl < 0 ? s : s.substring(nl + 1)).strip();
+        if (last.contains("NoAudioReceived")) {
+            return "NoAudioReceived (Microsoft không trả audio)";
         }
-        String trimmed = s.strip();
-        int nl = trimmed.lastIndexOf('\n');
-        return nl < 0 ? trimmed : trimmed.substring(nl + 1).strip();
+        if (last.length() > 200) {
+            last = last.substring(0, 200) + "…";
+        }
+        return "thoát mã " + exitCode + (last.isEmpty() ? "" : ": " + last);
     }
 
     /** Lỗi một lần gọi mà gọi lại có thể được (exit ≠ 0, file rỗng). Chỉ dùng nội bộ vòng thử lại. */
@@ -183,8 +200,9 @@ public class EdgeTtsProvider implements TtsProvider {
         private static final long serialVersionUID = 1L;
         private final transient TtsUnavailableException failure;
 
-        RetryableEdgeFailure(TtsUnavailableException failure) {
-            super(failure.getMessage(), failure, false, false);
+        /** @param summary 1 dòng ngắn (message của exception này), {@code failure} giữ chi tiết làm cause */
+        RetryableEdgeFailure(String summary, TtsUnavailableException failure) {
+            super(summary, failure, false, false);
             this.failure = failure;
         }
     }
