@@ -1,0 +1,67 @@
+{
+  "quiz-answer-out-of-range.json": [
+    "scenes[8].answer"
+  ],
+  "quiz-answer-negative.json": [
+    "scenes[8].answer"
+  ],
+  "first-scene-not-title.json": [
+    "scenes"
+  ],
+  "last-scene-not-summary.json": [
+    "scenes"
+  ],
+  "duplicate-scene-id.json": [
+    "scenes[1].id"
+  ],
+  "code-too-many-lines.json": [
+    "scenes[4].code"
+  ],
+  "code-line-too-long.json": [
+    "scenes[4].code"
+  ],
+  "unknown-field.json": [
+    "scenes[2].foo"
+  ],
+  "unknown-scene-type.json": [
+    "scenes[3].type"
+  ],
+  "table-row-missing-column.json": [
+    "scenes[7].rows[0]"
+  ],
+  "highlight-out-of-range.json": [
+    "scenes[4].highlight[1]"
+  ],
+  "too-few-scenes.json": [
+    "scenes"
+  ],
+  "too-many-scenes.json": [
+    "scenes"
+  ],
+  "bad-topic-id.json": [
+    "topicId"
+  ],
+  "unknown-theme.json": [
+    "theme"
+  ],
+  "missing-narration.json": [
+    "scenes[1].narration"
+  ],
+  "title-too-long.json": [
+    "scenes[2].accent"
+  ],
+  "steps-too-few.json": [
+    "scenes[3].steps"
+  ],
+  "invalid-video-type.json": [
+    "videoType"
+  ],
+  "malformed-json.json": [
+    "$"
+  ],
+  "multiple-errors.json": [
+    "topicId",
+    "scenes[4].highlight[0]",
+    "scenes[8].answer"
+  ]
+}

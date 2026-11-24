@@ -1,0 +1,183 @@
+{
+  "topicId": "R-08",
+  "track": "React",
+  "title": "Rules of Hooks & useReducer",
+  "version": 1,
+  "videoType": "SLIDES",
+  "theme": "midnight-brass",
+  "sources": [
+    "https://react.dev/reference/rules/rules-of-hooks",
+    "https://react.dev/reference/react/useReducer"
+  ],
+  "scenes": [
+    {
+      "id": "s01-title",
+      "type": "title",
+      "chip": "Ôn bài 60 giây",
+      "accent": "Rules",
+      "titleRest": "of Hooks",
+      "hook": "Vì sao Hook không được nằm trong if?",
+      "narration": "Vì sao Hook không được đặt trong câu lệnh if? Câu trả lời nằm ở cách React ghi nhớ Hook."
+    },
+    {
+      "id": "s02-definition",
+      "type": "definition",
+      "term": "Hook",
+      "expansion": "use* function",
+      "definition": "Hàm bắt đầu bằng use, cho component dùng state và các tính năng khác của React.",
+      "example": "const [n, setN] = useState(0)",
+      "narration": "Hook là các hàm bắt đầu bằng chữ use, giúp component dùng state và các tính năng khác của React.",
+      "spoken": "Hook là các hàm bắt đầu bằng chữ diu, giúp component dùng state và các tính năng khác của React."
+    },
+    {
+      "id": "s03-points",
+      "type": "points",
+      "accent": "2 luật",
+      "titleRest": "của Hooks",
+      "points": [
+        {
+          "heading": "Chỉ gọi ở top level",
+          "detail": "Không đặt trong if, vòng lặp hay sau return sớm"
+        },
+        {
+          "heading": "Chỉ gọi trong React",
+          "detail": "Trong component hoặc custom Hook, không trong hàm thường"
+        }
+      ],
+      "narration": "Chỉ có hai luật. Một: chỉ gọi Hook ở top level. Hai: chỉ gọi Hook trong component hoặc custom Hook."
+    },
+    {
+      "id": "s04-steps",
+      "type": "steps",
+      "accent": "React",
+      "titleRest": "nhớ Hook thế nào?",
+      "steps": [
+        "Render 1: gọi Hook theo thứ tự 0, 1, 2",
+        "React lưu state vào ô 0, 1, 2"
+      ],
+      "narration": "React không biết tên biến. Nó lưu state theo thứ tự gọi Hook, và lần render sau lấy lại đúng theo thứ tự đó."
+    },
+    {
+      "id": "s05-code",
+      "type": "code",
+      "accent": "Return sớm",
+      "titleRest": "trước Hook",
+      "file": "Profile.tsx",
+      "lang": "tsx",
+      "code": "function Profile({ user }) {\n  if (!user) return null;\n  const [tab, setTab] =\n    useState('info');\n  return <Tabs value={tab} />;\n}",
+      "highlight": [
+        2,
+        3
+      ],
+      "note": "Lần đầu 0 Hook, lần sau 1 Hook: React báo lỗi",
+      "narration": "Đoạn này nhìn vô hại, nhưng return sớm nằm trước Hook. Khi user đổi từ null sang có giá trị, số Hook thay đổi và React báo lỗi.",
+      "noteKind": "warn"
+    },
+    {
+      "id": "s06-code-compare",
+      "type": "codeCompare",
+      "accent": "Sửa",
+      "titleRest": "thế nào?",
+      "lang": "tsx",
+      "bad": {
+        "label": "Hook trong if",
+        "code": "if (open) {\n  useEffect(() => sub(), []);\n}"
+      },
+      "good": {
+        "label": "Điều kiện trong Hook",
+        "code": "useEffect(() => {\n  if (open) sub();\n}, [open]);"
+      },
+      "note": "Đưa điều kiện vào bên trong Hook",
+      "narration": "Cách sửa: đừng bọc Hook bằng điều kiện. Hãy đưa điều kiện vào bên trong Hook."
+    },
+    {
+      "id": "s07-compare",
+      "type": "compare",
+      "accent": "useState",
+      "titleRest": "hay useReducer?",
+      "left": {
+        "heading": "useState",
+        "kind": "neutral",
+        "items": [
+          "State đơn lẻ, độc lập",
+          "Bật tắt modal, input",
+          "Ít logic cập nhật"
+        ]
+      },
+      "right": {
+        "heading": "useReducer",
+        "kind": "good",
+        "items": [
+          "Nhiều state đổi cùng lúc",
+          "Form có submit và lỗi",
+          "Reducer pure, dễ test"
+        ]
+      },
+      "note": "Hiệu năng như nhau, khác ở cách tổ chức logic",
+      "narration": "State đơn giản thì dùng useState. Nhiều state đổi cùng lúc theo nghiệp vụ thì dùng useReducer."
+    },
+    {
+      "id": "s08-table",
+      "type": "table",
+      "accent": "So sánh",
+      "titleRest": "nhanh",
+      "columns": [
+        "Tiêu chí",
+        "useState",
+        "useReducer"
+      ],
+      "rows": [
+        [
+          "Độ phức tạp",
+          "Thấp",
+          "Trung bình"
+        ],
+        [
+          "Logic cập nhật",
+          "Rải rác",
+          "Gom về reducer"
+        ],
+        [
+          "Test riêng",
+          "Khó",
+          "Dễ"
+        ],
+        [
+          "Hàm cập nhật",
+          "Ổn định",
+          "Ổn định"
+        ]
+      ],
+      "narration": "Tóm lại, useReducer gom logic về một chỗ và dễ test hơn. Cả setState và dispatch đều có reference ổn định."
+    },
+    {
+      "id": "s09-quiz",
+      "type": "quiz",
+      "question": "Vì sao Hook phải được gọi cùng thứ tự ở mọi lần render?",
+      "options": [
+        "Để code dễ đọc hơn",
+        "React lưu state theo thứ tự",
+        "Để chạy nhanh hơn",
+        "Do TypeScript yêu cầu"
+      ],
+      "narration": "Câu hỏi phỏng vấn: vì sao Hook phải gọi cùng thứ tự ở mọi lần render?",
+      "answer": 1,
+      "explain": "React gắn state vào từng Hook theo thứ tự gọi, không theo tên biến.",
+      "revealNarration": "Đáp án B. React gắn state theo thứ tự gọi Hook, không theo tên biến."
+    },
+    {
+      "id": "s10-summary",
+      "type": "summary",
+      "accent": "Chốt",
+      "titleRest": "trong 10 giây",
+      "bullets": [
+        "Hook luôn ở top level",
+        "Điều kiện đặt bên trong Hook",
+        "Return sớm đặt sau Hook",
+        "Bật eslint-plugin-react-hooks"
+      ],
+      "outro": "Vì sao Hook phải gọi cùng thứ tự?",
+      "narration": "Nhớ bốn điều này. Và thử tự trả lời: vì sao Hook phải gọi cùng thứ tự?"
+    }
+  ]
+}

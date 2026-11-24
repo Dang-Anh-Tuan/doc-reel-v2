@@ -1,0 +1,47 @@
+{
+  "topicId": "R-08",
+  "track": "React",
+  "title": "Rules of Hooks & useReducer",
+  "version": 1,
+  "videoType": "SLIDES",
+  "theme": "midnight-brass",
+  "sources": [
+    "https://react.dev/reference/rules/rules-of-hooks",
+    "https://react.dev/reference/react/useReducer"
+  ],
+  "scenes": [
+    {
+      "id": "s01-title",
+      "type": "title",
+      "chip": "Ôn bài 60 giây",
+      "accent": "Rules",
+      "titleRest": "of Hooks",
+      "hook": "Vì sao Hook không được nằm trong if?",
+      "narration": "Vì sao Hook không được đặt trong câu lệnh if? Câu trả lời nằm ở cách React ghi nhớ Hook."
+    },
+    {
+      "id": "s02-definition",
+      "type": "definition",
+      "term": "Hook",
+      "expansion": "use* function",
+      "definition": "Hàm bắt đầu bằng use, cho component dùng state và các tính năng khác của React.",
+      "example": "const [n, setN] = useState(0)",
+      "narration": "Hook là các hàm bắt đầu bằng chữ use, giúp component dùng state và các tính năng khác của React.",
+      "spoken": "Hook là các hàm bắt đầu bằng chữ diu, giúp component dùng state và các tính năng khác của React."
+    },
+    {
+      "id": "s10-summary",
+      "type": "summary",
+      "accent": "Chốt",
+      "titleRest": "trong 10 giây",
+      "bullets": [
+        "Hook luôn ở top level",
+        "Điều kiện đặt bên trong Hook",
+        "Return sớm đặt sau Hook",
+        "Bật eslint-plugin-react-hooks"
+      ],
+      "outro": "Vì sao Hook phải gọi cùng thứ tự?",
+      "narration": "Nhớ bốn điều này. Và thử tự trả lời: vì sao Hook phải gọi cùng thứ tự?"
+    }
+  ]
+}
