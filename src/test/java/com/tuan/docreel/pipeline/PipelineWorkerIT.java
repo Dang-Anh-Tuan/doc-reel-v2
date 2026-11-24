@@ -156,4 +156,37 @@ class PipelineWorkerIT extends PipelineTestBase {
                 .isEqualTo("SKIPPED");
         assertThat(job(id).getState()).isEqualTo(JobState.UPLOADED);
     }
+
+    /** Step tự xóa "jobId" khỏi MDC (như RenderStep...) → log lỗi của worker sau bước vẫn phải có jobId. */
+    @Test
+    void errorLogAfterStepKeepsJobIdEvenIfStepClearsMdc() {
+        UUID id = newJob("Video MDC");
+        List<FakeStep> steps = fakeSteps();
+        steps.getFirst().behaviour = ctx -> {
+            org.slf4j.MDC.remove("jobId");
+            throw new TtsException("lỗi nội dung");
+        };
+        ch.qos.logback.classic.Logger logger =
+                (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(PipelineWorker.class);
+        var appender = new ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent>() {
+            @Override
+            protected void append(ch.qos.logback.classic.spi.ILoggingEvent event) {
+                event.prepareForDeferredProcessing(); // chụp MDC lúc ghi
+                super.append(event);
+            }
+        };
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            drain(worker(RetryPolicy.DEFAULT, arr(steps)));
+        } finally {
+            logger.detachAppender(appender);
+        }
+
+        assertThat(job(id).getState()).isEqualTo(JobState.FAILED);
+        assertThat(appender.list)
+                .filteredOn(e -> e.getLevel() == ch.qos.logback.classic.Level.ERROR)
+                .isNotEmpty()
+                .allSatisfy(e -> assertThat(e.getMDCPropertyMap()).containsEntry("jobId", id.toString()));
+    }
 }

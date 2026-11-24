@@ -140,7 +140,13 @@ public class PipelineWorker {
             Path workDir = dirs.work().resolve(job.getId().toString());
             Files.createDirectories(workDir);
             VideoScript script = mapper.readValue(job.getScript(), VideoScript.class);
-            StepResult result = step.execute(new StepContext(job.getId(), current, script, workDir, attemptNo));
+            StepResult result;
+            try {
+                result = step.execute(new StepContext(job.getId(), current, script, workDir, attemptNo));
+            } finally {
+                // Step tự put/remove "jobId" trong MDC → khôi phục để log sau bước (kể cả log lỗi) vẫn có jobId
+                MDC.put("jobId", job.getId().toString());
+            }
             if (result.nextState() != jobStep.resultingState()) {
                 throw new IllegalStateException(
                         "Bước " + jobStep + " trả state " + result.nextState() + ", cần " + jobStep.resultingState());
