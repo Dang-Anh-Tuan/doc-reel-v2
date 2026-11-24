@@ -15,3 +15,19 @@
 
 1. `application.yml` (orchestrator, tùy chọn): thêm `docreel.inbox.poll-interval: PT10S` (hiện đã có mặc định trong `@Scheduled`, test đặt PT1H để tránh tranh chấp).
 2. Ghép pipeline (P5): file hợp lệ nằm ở `work/{jobId}/input.json`; khi job UPLOADED P5 cần chuyển file này sang `done/` (đặt tên `{jobId}-input.json` hoặc tên gốc). P4 không làm bước này vì chưa có vòng đời job.
+
+# NEEDS (P8)
+
+1. `src/main/resources/application.yml` (tùy chọn): thêm
+   ```yaml
+   docreel:
+     lexicon:
+       path: config/lexicon.yaml   # mặc định trong code
+       case-sensitive: false       # mặc định trong code
+   ```
+   Lý do: `Lexicon` đọc 2 khóa này bằng `@Value` với giá trị mặc định ngay trong code, nên chưa bắt buộc; chỉ cần nếu muốn chỉnh đường dẫn / phân biệt hoa thường.
+2. `config/lexicon.yaml` (P7, phần của "Tôi"): chưa có file → `Lexicon` coi như rỗng (không lỗi). Định dạng phẳng `Thuật ngữ: "Cách đọc"`.
+3. `PLAN.md` / `SPEC.md`: SPEC mục 8 ghi lệnh edge-tts `--rate …`; code dùng dạng một tham số `--rate=-10%` vì argparse coi `-10%` là cờ khi tách riêng. Nên sửa mô tả cho khớp.
+4. Migration: không cần file mới (bảng `tts_usage` đã có ở `V1__init.sql`).
+5. P5: sau khi `VoiceStep` xong, lưu `VoiceResult.provider()` vào `job.tts_provider` (voice không ghi thẳng entity). `VoiceStep` hiện chỉ đọc `job.tts_settings` và `job.tts_provider` (pinned); `execute` chưa trả provider ra ngoài, nên P5 cần mở rộng `StepResult`/`StepContext` hoặc gọi `TtsService.voice` trực tiếp.
+6. Mã lỗi: `TtsUnavailableException` (message bắt đầu `TTS_UNAVAILABLE`) = lỗi edge-tts; `TtsTransientException` = mạng/5xx (retry); `TtsException` thường (vd 401 sai key) = không nên retry. P5 `RetryPolicy` cần phân loại theo các lớp này.
