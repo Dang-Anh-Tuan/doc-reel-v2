@@ -1,0 +1,184 @@
+{
+  "topicId": "J-01",
+  "track": "Spring",
+  "title": "Spring IoC và Dependency Injection",
+  "version": 1,
+  "videoType": "SLIDES",
+  "theme": "navy-terracotta",
+  "sources": [
+    "https://docs.spring.io/spring-framework/reference/core/beans/dependencies/factory-collaborators.html",
+    "https://docs.spring.io/spring-framework/reference/core/beans/factory-scopes.html"
+  ],
+  "scenes": [
+    {
+      "id": "s01-title",
+      "type": "title",
+      "chip": "Spring Core",
+      "accent": "DI",
+      "titleRest": "trong Spring",
+      "hook": "Ai tạo object cho bạn? Không phải new, mà là container",
+      "narration": "Trong Spring, bạn gần như không tự new service. Vậy ai tạo object và nối chúng lại với nhau?"
+    },
+    {
+      "id": "s02-definition",
+      "type": "definition",
+      "term": "IoC",
+      "expansion": "Inversion of Control",
+      "definition": "Thay vì tự new đối tượng, bạn giao cho container tạo bean, tiêm phụ thuộc và quản lý vòng đời.",
+      "example": "ctx.getBean(OrderService.class)",
+      "narration": "IoC, đảo ngược điều khiển, nghĩa là bạn không tự tạo đối tượng nữa. Spring container tạo bean, tiêm phụ thuộc và quản lý vòng đời của chúng.",
+      "spoken": "I O C, đảo ngược điều khiển, nghĩa là bạn không tự tạo đối tượng nữa. Spring container tạo bean, tiêm phụ thuộc và quản lý vòng đời của chúng."
+    },
+    {
+      "id": "s03-steps",
+      "type": "steps",
+      "accent": "Spring",
+      "titleRest": "tạo bean thế nào?",
+      "steps": [
+        "Quét @Component, đọc @Bean",
+        "Tạo BeanDefinition cho từng bean",
+        "Khởi tạo bean, tiêm phụ thuộc",
+        "Chạy @PostConstruct",
+        "Bean sẵn sàng để dùng"
+      ],
+      "narration": "Khi khởi động, Spring quét các class có annotation, tạo định nghĩa bean, khởi tạo và tiêm phụ thuộc, chạy hàm khởi tạo, rồi bean mới sẵn sàng."
+    },
+    {
+      "id": "s04-code-compare",
+      "type": "codeCompare",
+      "accent": "Field",
+      "titleRest": "hay constructor?",
+      "lang": "java",
+      "bad": {
+        "label": "Field injection",
+        "code": "@Service\nclass OrderService {\n  @Autowired\n  private PaymentClient client;\n}"
+      },
+      "good": {
+        "label": "Constructor injection",
+        "code": "@Service\nclass OrderService {\n  private final PaymentClient client;\n  OrderService(PaymentClient client) {\n    this.client = client; } }"
+      },
+      "note": "Chỉ có 1 constructor thì không cần @Autowired",
+      "narration": "Thay vì gắn Autowired lên field, hãy nhận phụ thuộc qua constructor. Class chỉ có một constructor thì Spring tự dùng nó, không cần annotation."
+    },
+    {
+      "id": "s05-compare",
+      "type": "compare",
+      "accent": "Constructor",
+      "titleRest": "thắng vì sao?",
+      "left": {
+        "heading": "Field",
+        "kind": "bad",
+        "items": [
+          "Không khai báo được final",
+          "Test phải dùng reflection",
+          "Giấu phụ thuộc thật"
+        ]
+      },
+      "right": {
+        "heading": "Constructor",
+        "kind": "good",
+        "items": [
+          "Field final, bất biến",
+          "Test bằng new + mock",
+          "Lộ ngay khi quá nhiều deps"
+        ]
+      },
+      "narration": "Constructor injection cho phép field final, test chỉ cần new kèm mock, và nếu constructor quá dài thì đó là dấu hiệu class đang làm quá nhiều việc."
+    },
+    {
+      "id": "s06-table",
+      "type": "table",
+      "accent": "Bean",
+      "titleRest": "scope",
+      "columns": [
+        "Scope",
+        "Số instance"
+      ],
+      "rows": [
+        [
+          "singleton",
+          "1 / container"
+        ],
+        [
+          "prototype",
+          "Mỗi lần lấy bean"
+        ],
+        [
+          "request",
+          "1 / HTTP request"
+        ],
+        [
+          "session",
+          "1 / HTTP session"
+        ]
+      ],
+      "narration": "Mặc định bean là singleton, một instance cho cả container. Prototype tạo mới mỗi lần lấy. Request và session gắn với một request hay một phiên HTTP."
+    },
+    {
+      "id": "s07-code",
+      "type": "code",
+      "accent": "Singleton",
+      "titleRest": "và state",
+      "file": "CartService.java",
+      "lang": "java",
+      "code": "@Service\nclass CartService {\n  private int total; // dùng chung!\n  void add(int price) {\n    total += price;\n  }\n}",
+      "highlight": [
+        3,
+        5
+      ],
+      "note": "Singleton dùng chung mọi request: đừng giữ state",
+      "noteKind": "warn",
+      "narration": "Bean singleton được mọi request dùng chung. Giữ state như biến total trong service sẽ làm dữ liệu của người này lẫn sang người khác."
+    },
+    {
+      "id": "s08-points",
+      "type": "points",
+      "accent": "Lỗi",
+      "titleRest": "hay gặp",
+      "points": [
+        {
+          "heading": "NoSuchBeanDefinition",
+          "detail": "Bean chưa được quét: sai package hoặc thiếu @Component"
+        },
+        {
+          "heading": "Nhiều bean cùng kiểu",
+          "detail": "Dùng @Primary hoặc @Qualifier để chọn đúng bean"
+        },
+        {
+          "heading": "Phụ thuộc vòng",
+          "detail": "Spring Boot mặc định cấm; tách service hoặc dùng event"
+        }
+      ],
+      "narration": "Ba lỗi hay gặp: không tìm thấy bean vì nằm ngoài package được quét, có nhiều bean cùng kiểu, và hai bean phụ thuộc vòng vào nhau."
+    },
+    {
+      "id": "s09-quiz",
+      "type": "quiz",
+      "question": "OrderService có đúng 1 constructor, không có @Autowired. Spring làm gì?",
+      "options": [
+        "Báo lỗi khi khởi động",
+        "Tự dùng constructor đó",
+        "Chuyển sang field injection",
+        "Tạo bean không phụ thuộc"
+      ],
+      "answer": 1,
+      "explain": "Từ Spring 4.3, class có 1 constructor được tự dùng để tiêm phụ thuộc.",
+      "narration": "Câu hỏi phỏng vấn: class chỉ có một constructor và không gắn Autowired, Spring sẽ làm gì?",
+      "revealNarration": "Đáp án B. Từ Spring 4.3, constructor duy nhất được dùng tự động để tiêm phụ thuộc."
+    },
+    {
+      "id": "s10-summary",
+      "type": "summary",
+      "accent": "Chốt",
+      "titleRest": "DI trong Spring",
+      "bullets": [
+        "IoC: container tạo và nối bean",
+        "Ưu tiên constructor injection",
+        "Singleton: không giữ state",
+        "Trùng kiểu: @Primary, @Qualifier"
+      ],
+      "outro": "Vì sao constructor injection dễ test hơn?",
+      "narration": "Nhớ bốn điều này. Và tự trả lời: vì sao constructor injection dễ test hơn field injection?"
+    }
+  ]
+}
