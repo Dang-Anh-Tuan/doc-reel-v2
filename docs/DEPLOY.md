@@ -4,7 +4,7 @@
 1. Cài Java 21, ffmpeg (`winget install Gyan.FFmpeg`), Docker Desktop (Postgres: `docker compose up -d`), edge-tts (`pip install edge-tts`).
 2. Cài Chromium cho đúng bản Playwright của dự án: `npx playwright@1.65.1 install chromium`
    (hoặc `java -cp <classpath> com.microsoft.playwright.CLI install chromium`). Thiếu bước này `--doctor` báo mục Chromium CRITICAL.
-3. Tạo `.env` ở gốc repo (không commit): `DB_*`, `ELEVENLABS_API_KEY`, `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`, `YOUTUBE_ENCRYPTION_KEY`.
+3. Tạo `.env` ở gốc repo (không commit): `DB_*`, `ELEVENLABS_API_KEY`, `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`, `YOUTUBE_TOKEN_ENCRYPTION_KEY` (tên cũ `YOUTUBE_ENCRYPTION_KEY` chỉ còn là dự phòng).
 4. Tải `WinSW-x64.exe` từ trang release của WinSW.
 5. Build: `.\mvnw.cmd package` (jar nằm ở `target\docreel-*.jar`).
 

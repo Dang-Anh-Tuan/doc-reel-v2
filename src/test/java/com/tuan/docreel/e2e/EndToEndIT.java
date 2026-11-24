@@ -254,7 +254,7 @@ class EndToEndIT {
         }
         assertThat(videoSeconds)
                 .as("thời lượng video = tổng audio các scene (%d file)", audios.size())
-                .isCloseTo(audioSeconds, within(FRAME * 2));
+                .isCloseTo(audioSeconds, within(FRAME));
         assertSlideBoundaries(workDir, mp4);
 
         Path srt = workDir.resolve("subtitles.srt");
@@ -297,12 +297,12 @@ class EndToEndIT {
                 String prev = units.get(i - 1);
                 Path ownPng = workDir.resolve(own + ".png");
                 Path prevPng = workDir.resolve(prev + ".png");
-                assertThat(ssim(mp4, start + 0.5, ownPng))
-                        .as("%.2fs: đã sang slide %s", start + 0.5, own)
-                        .isGreaterThan(ssim(mp4, start + 0.5, prevPng));
-                assertThat(ssim(mp4, start - 0.15, prevPng))
-                        .as("%.2fs: còn ở slide %s", start - 0.15, prev)
-                        .isGreaterThan(ssim(mp4, start - 0.15, ownPng));
+                assertThat(ssim(mp4, start + 2 * FRAME, ownPng))
+                        .as("%.3fs: đã sang slide %s", start + 2 * FRAME, own)
+                        .isGreaterThan(ssim(mp4, start + 2 * FRAME, prevPng));
+                assertThat(ssim(mp4, start - 2 * FRAME, prevPng))
+                        .as("%.3fs: còn ở slide %s", start - 2 * FRAME, prev)
+                        .isGreaterThan(ssim(mp4, start - 2 * FRAME, ownPng));
             }
             start += Double.parseDouble(
                     probe(workDir.resolve(units.get(i) + ".mp3"), "-show_entries", "format=duration", "-of", "csv=p=0")

@@ -32,8 +32,8 @@ public class YouTubeTokenCheck implements SelfCheckItem {
         if (!store.exists()) {
             return CheckResult.warn(
                     NAME,
-                    "chưa có refresh token dùng được (thiếu data/youtube-token.enc, hoặc sai YOUTUBE_ENCRYPTION_KEY)",
-                    "Chạy `java -jar docreel.jar --youtube-auth` để cấp quyền; nếu đã cấp, kiểm YOUTUBE_ENCRYPTION_KEY");
+                    "chưa có refresh token dùng được (thiếu data/youtube-token.enc, hoặc sai YOUTUBE_TOKEN_ENCRYPTION_KEY, tên cũ YOUTUBE_ENCRYPTION_KEY vẫn được nhận)",
+                    "Chạy `java -jar docreel.jar --youtube-auth` để cấp quyền; nếu đã cấp, kiểm YOUTUBE_TOKEN_ENCRYPTION_KEY");
         }
         return CheckResult.ok(NAME, "đã cấp quyền (refresh token có và giải mã được)");
     }

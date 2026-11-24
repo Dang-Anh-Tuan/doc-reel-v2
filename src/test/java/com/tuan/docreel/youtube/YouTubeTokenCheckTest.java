@@ -31,6 +31,6 @@ class YouTubeTokenCheckTest {
         new OAuthTokenStore(dir.resolve("t.enc"), "k").save("refresh");
         var r = new YouTubeTokenCheck(new OAuthTokenStore(dir.resolve("t.enc"), "other")).check();
         assertThat(r.status()).isEqualTo(CheckStatus.WARN);
-        assertThat(r.detail()).contains("YOUTUBE_ENCRYPTION_KEY");
+        assertThat(r.detail()).contains("YOUTUBE_TOKEN_ENCRYPTION_KEY");
     }
 }
