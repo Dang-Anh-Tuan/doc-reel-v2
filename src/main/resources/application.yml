@@ -46,10 +46,11 @@ docreel:
   self-check:
     interval: PT15M                 # chạy lại self-check định kỳ (PLAN 2.6)
   tts:
-    # Tạm dùng edge-tts làm chính: giọng Ngọc Anh (Voice Library) trả 402 với gói ElevenLabs Free.
-    # Nâng gói ElevenLabs (Starter+) thì đổi lại primary: elevenlabs.
-    primary: edge
-    fallback: edge
+    # 25/11/2026: chỉ dùng ElevenLabs (gói Starter, giọng Ngọc Anh). Tạm bỏ edge-tts vì dịch vụ Microsoft
+    # trả NoAudioReceived chập chờn với giọng vi-VN. fallback = primary → hết quota thì job FAILED (lệch SPEC mục 8,
+    # người dùng đã duyệt). Có phương án dự phòng mới thì đổi lại fallback.
+    primary: elevenlabs
+    fallback: elevenlabs
     elevenlabs:
       api-key: ${ELEVENLABS_API_KEY:}
       base-url: https://api.elevenlabs.io
