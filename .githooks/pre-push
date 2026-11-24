@@ -1,0 +1,13 @@
+#!/bin/sh
+# Git hook pre-push: chạy toàn bộ kiểm tra trước khi push (PLAN 2.7).
+# Bật một lần cho mỗi bản clone:   git config core.hooksPath .githooks
+# Bỏ qua khẩn cấp (không khuyến khích):  git push --no-verify
+ROOT="$(git rev-parse --show-toplevel)" || exit 1
+case "$(uname -s 2>/dev/null)" in
+  MINGW*|MSYS*|CYGWIN*|Windows_NT)
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$ROOT/scripts/check.ps1"
+    ;;
+  *)
+    "$ROOT/scripts/check.sh"
+    ;;
+esac

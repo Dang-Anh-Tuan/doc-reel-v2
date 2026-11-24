@@ -1,0 +1,57 @@
+spring:
+  application:
+    name: docreel
+  config:
+    # Bí mật (ELEVENLABS_API_KEY, DB_PASSWORD, ...) nằm trong .env ở thư mục chạy app, không commit.
+    import: optional:file:.env[.properties]
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:55432}/${DB_NAME:docreel}
+    username: ${DB_USER:docreel}
+    password: ${DB_PASSWORD:docreel}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+server:
+  port: ${SERVER_PORT:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+docreel:
+  dirs:
+    inbox: ${DOCREEL_HOME:.}/inbox
+    requests: ${DOCREEL_HOME:.}/requests
+    work: ${DOCREEL_HOME:.}/work
+    done: ${DOCREEL_HOME:.}/done
+    failed: ${DOCREEL_HOME:.}/failed
+    duplicate: ${DOCREEL_HOME:.}/duplicate
+  tools:
+    ffmpeg: ${FFMPEG_PATH:ffmpeg}
+    ffprobe: ${FFPROBE_PATH:ffprobe}
+  self-check:
+    interval: PT15M                 # chạy lại self-check định kỳ (PLAN 2.6)
+  tts:
+    primary: elevenlabs
+    fallback: edge
+    elevenlabs:
+      api-key: ${ELEVENLABS_API_KEY:}
+      base-url: https://api.elevenlabs.io
+      model: eleven_flash_v2_5
+      voice-id: "TODO_CHON_SAU"       # lấy từ Voice Library (P7)
+      speed: 1.0                      # voice_settings.speed, 0.7–1.2
+    edge:
+      command: edge-tts               # hoặc đường dẫn đầy đủ tới edge-tts(.exe)
+      voice: vi-VN-HoaiMyNeural       # hoặc vi-VN-NamMinhNeural
+      rate: "+0%"                     # --rate, vd "+10%"
+      pause-between-calls-ms: 300

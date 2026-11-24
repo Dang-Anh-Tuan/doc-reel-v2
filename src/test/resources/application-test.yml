@@ -1,0 +1,9 @@
+# Profile test: thư mục làm việc nằm trong target/ để không rải inbox/, work/... ra gốc repo.
+docreel:
+  dirs:
+    inbox: target/test-data/inbox
+    requests: target/test-data/requests
+    work: target/test-data/work
+    done: target/test-data/done
+    failed: target/test-data/failed
+    duplicate: target/test-data/duplicate

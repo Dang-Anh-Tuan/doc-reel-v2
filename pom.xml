@@ -1,0 +1,383 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.2.0</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.tuan</groupId>
+    <artifactId>docreel</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>docreel</name>
+    <description>DocReel: JSON kịch bản → video Shorts tiếng Việt</description>
+
+    <properties>
+        <java.version>21</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Thư viện không do Spring Boot BOM quản lý -->
+        <playwright.version>1.65.1</playwright.version>
+        <archunit.version>1.5.1</archunit.version>
+        <wiremock.version>3.13.2</wiremock.version>
+        <jacoco-plugin.version>0.8.16</jacoco-plugin.version>
+        <spotless-plugin.version>3.12.0</spotless-plugin.version>
+        <palantir-java-format.version>2.103.0</palantir-java-format.version>
+
+        <!-- Tag JUnit bị loại theo mặc định; profile media / e2e ghi đè -->
+        <test.excludedGroups>media,e2e</test.excludedGroups>
+
+        <!-- Ngưỡng line coverage (PLAN 2.2) -->
+        <coverage.core.minimum>0.80</coverage.core.minimum>
+        <coverage.other.minimum>0.60</coverage.other.minimum>
+        <!-- Chỉ bỏ cổng coverage khi chạy một phần test (-Dtest / -Dit.test), xem profile bên dưới -->
+        <jacoco.check.skip>false</jacoco.check.skip>
+    </properties>
+
+    <dependencies>
+        <!-- Spring -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jackson</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-flyway</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Chụp slide (P6) -->
+        <dependency>
+            <groupId>com.microsoft.playwright</groupId>
+            <artifactId>playwright</artifactId>
+            <version>${playwright.version}</version>
+        </dependency>
+
+        <!-- Test -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-flyway-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.wiremock</groupId>
+            <artifactId>wiremock-standalone</artifactId>
+            <version>${wiremock.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.tngtech.archunit</groupId>
+            <artifactId>archunit-junit5</artifactId>
+            <version>${archunit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <compilerArgs>
+                        <arg>-Xlint:all</arg>
+                        <!-- "processing": javac cảnh báo "No processor claimed any of these annotations"
+                             mỗi khi spring-boot-configuration-processor chạy mà không xử lý hết annotation
+                             (vd @Entity, @Test). Đây là cảnh báo của cơ chế annotation processing, không phải
+                             của code → tắt riêng mục này, các mục lint khác vẫn là lỗi (-Werror). -->
+                        <arg>-Xlint:-processing</arg>
+                        <arg>-Werror</arg>
+                    </compilerArgs>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>default-compile</id>
+                        <configuration>
+                            <annotationProcessorPaths>
+                                <path>
+                                    <groupId>org.springframework.boot</groupId>
+                                    <artifactId>spring-boot-configuration-processor</artifactId>
+                                </path>
+                            </annotationProcessorPaths>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>default-testCompile</id>
+                        <configuration>
+                            <compilerArgs combine.children="append">
+                                <arg>-proc:none</arg>
+                            </compilerArgs>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>${spotless-plugin.version}</version>
+                <configuration>
+                    <java>
+                        <palantirJavaFormat>
+                            <version>${palantir-java-format.version}</version>
+                        </palantirJavaFormat>
+                        <removeUnusedImports/>
+                        <trimTrailingWhitespace/>
+                        <endWithNewline/>
+                    </java>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>spotless-check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco-plugin.version}</version>
+                <configuration>
+                    <excludes>
+                        <!-- Điểm vào main(): chỉ gọi SpringApplication/doctor, đã kiểm bằng IT riêng -->
+                        <exclude>com/tuan/docreel/DocreelApplication.class</exclude>
+                        <!-- Record thuần dữ liệu (không có logic) của khung pipeline -->
+                        <exclude>com/tuan/docreel/pipeline/StepContext.class</exclude>
+                        <exclude>com/tuan/docreel/pipeline/StepResult.class</exclude>
+                    </excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${jacoco.check.skip}</skip>
+                            <rules>
+                                <rule>
+                                    <element>PACKAGE</element>
+                                    <includes>
+                                        <include>com.tuan.docreel.script</include>
+                                        <include>com.tuan.docreel.script.*</include>
+                                        <include>com.tuan.docreel.job</include>
+                                        <include>com.tuan.docreel.job.*</include>
+                                        <include>com.tuan.docreel.pipeline</include>
+                                        <include>com.tuan.docreel.pipeline.*</include>
+                                        <include>com.tuan.docreel.voice</include>
+                                        <include>com.tuan.docreel.voice.*</include>
+                                        <include>com.tuan.docreel.settings</include>
+                                        <include>com.tuan.docreel.settings.*</include>
+                                    </includes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${coverage.core.minimum}</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                                <rule>
+                                    <element>PACKAGE</element>
+                                    <excludes>
+                                        <exclude>com.tuan.docreel.script</exclude>
+                                        <exclude>com.tuan.docreel.script.*</exclude>
+                                        <exclude>com.tuan.docreel.job</exclude>
+                                        <exclude>com.tuan.docreel.job.*</exclude>
+                                        <exclude>com.tuan.docreel.pipeline</exclude>
+                                        <exclude>com.tuan.docreel.pipeline.*</exclude>
+                                        <exclude>com.tuan.docreel.voice</exclude>
+                                        <exclude>com.tuan.docreel.voice.*</exclude>
+                                        <exclude>com.tuan.docreel.settings</exclude>
+                                        <exclude>com.tuan.docreel.settings.*</exclude>
+                                    </excludes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${coverage.other.minimum}</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>@{argLine} -XX:+EnableDynamicAgentLoading -Dfile.encoding=UTF-8</argLine>
+                    <excludedGroups>${test.excludedGroups}</excludedGroups>
+                    <failIfNoSpecifiedTests>false</failIfNoSpecifiedTests>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <configuration>
+                    <argLine>@{argLine} -XX:+EnableDynamicAgentLoading -Dfile.encoding=UTF-8</argLine>
+                    <excludedGroups>${test.excludedGroups}</excludedGroups>
+                    <failIfNoSpecifiedTests>false</failIfNoSpecifiedTests>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <!-- Test cần ffmpeg / Chromium: ./mvnw verify -Pmedia (chạy cả test thường + @Tag("media")) -->
+        <profile>
+            <id>media</id>
+            <properties>
+                <test.excludedGroups>e2e</test.excludedGroups>
+            </properties>
+        </profile>
+        <!-- E2E (P11): ./mvnw verify -Pe2e (chạy mọi test, gồm media + e2e) -->
+        <profile>
+            <id>e2e</id>
+            <properties>
+                <test.excludedGroups>none</test.excludedGroups>
+            </properties>
+        </profile>
+        <!-- Chạy một phần test (lệnh tự kiểm tra của từng phase) → coverage toàn dự án không có ý nghĩa,
+             bỏ cổng JaCoCo. Lệnh đầy đủ (scripts/check.ps1) không đặt các biến này nên cổng luôn bật. -->
+        <profile>
+            <id>partial-unit-tests</id>
+            <activation>
+                <property>
+                    <name>test</name>
+                </property>
+            </activation>
+            <properties>
+                <jacoco.check.skip>true</jacoco.check.skip>
+            </properties>
+        </profile>
+        <profile>
+            <id>partial-integration-tests</id>
+            <activation>
+                <property>
+                    <name>it.test</name>
+                </property>
+            </activation>
+            <properties>
+                <jacoco.check.skip>true</jacoco.check.skip>
+            </properties>
+        </profile>
+    </profiles>
+</project>
