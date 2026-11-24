@@ -10,3 +10,8 @@
 2. `.gitignore` / `src/.env.example` (orchestrator): thêm `data/youtube-token.enc` vào ignore và 3 tên biến môi trường YouTube vào `.env.example`.
 3. `SystemSelfCheck` (P11/orchestrator): thêm mục "token YouTube" dùng `OAuthTokenStore.exists()`.
 4. Ghép pipeline (P5/P2): `YouTubeUploadStep` mong MP4 ở `work/{jobId}/video.mp4` (hằng `VIDEO_FILE`) và ghi id vào `work/{jobId}/youtube-id.txt`; P5 lưu `youtube_id` vào `video_job` và lắng nghe `VideoUploadedEvent` (jobId, youtubeId, topicId, track, title, privacyStatus).
+
+# NEEDS (P4)
+
+1. `application.yml` (orchestrator, tùy chọn): thêm `docreel.inbox.poll-interval: PT10S` (hiện đã có mặc định trong `@Scheduled`, test đặt PT1H để tránh tranh chấp).
+2. Ghép pipeline (P5): file hợp lệ nằm ở `work/{jobId}/input.json`; khi job UPLOADED P5 cần chuyển file này sang `done/` (đặt tên `{jobId}-input.json` hoặc tên gốc). P4 không làm bước này vì chưa có vòng đời job.
