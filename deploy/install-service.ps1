@@ -117,7 +117,8 @@ Push-Location $InstallDir
 try {
     $env:DOCREEL_HOME = Join-Path $InstallDir 'data-root'
     foreach ($kv in $toolEnv.GetEnumerator()) { Set-Item -Path "env:$($kv.Key)" -Value $kv.Value }
-    & $java -jar (Join-Path $InstallDir 'docreel.jar') --doctor
+    try { [Console]::OutputEncoding = [Text.Encoding]::UTF8 } catch { }
+    & $java '-Dstdout.encoding=UTF-8' -jar (Join-Path $InstallDir 'docreel.jar') --doctor
     $doctorExit = $LASTEXITCODE
 } finally {
     Pop-Location

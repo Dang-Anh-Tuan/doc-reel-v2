@@ -26,7 +26,8 @@ Log mỗi dòng có `[jobId=...]` (biến `LOGGING_PATTERN_LEVEL` trong XML).
 Gỡ: thêm `-Uninstall` (giữ nguyên dữ liệu).
 
 ## Kiểm tra
-- `cd C:\docreel; java -jar docreel.jar --doctor` → bảng từng mục, exit 0 nếu không có CRITICAL (WARN vẫn là đạt, ví dụ chưa cấp YouTube).
+- `cd C:\docreel; java "-Dstdout.encoding=UTF-8" -jar docreel.jar --doctor` → bảng từng mục, exit 0 nếu không có CRITICAL (WARN vẫn là đạt, ví dụ chưa cấp YouTube).
+  Thiếu `-Dstdout.encoding=UTF-8` thì tiếng Việt hiện thành `?` trên console Windows (chỉ hiển thị, kết quả không đổi).
 - `GET http://localhost:8080/actuator/health`, `GET /api/system/check` (khi P12 có).
 - Log: `C:\docreel\logs\docreel-service.YYYYMMDD.out.log` (mỗi ngày một file; `.err.log` cho stderr).
 - Khởi động lại máy → service tự chạy (delayed auto start) → `--doctor` vẫn xanh.

@@ -14,7 +14,7 @@
   <!-- %BASE% = thư mục chứa docreel-service.exe; cũng là thư mục chứa docreel.jar và .env -->
   <workingdirectory>%BASE%</workingdirectory>
   <executable>java</executable>
-  <arguments>-Xmx1g -Dfile.encoding=UTF-8 -jar "%BASE%\docreel.jar"</arguments>
+  <arguments>-Xmx1g -Dfile.encoding=UTF-8 -Dstdout.encoding=UTF-8 -Dstderr.encoding=UTF-8 -jar "%BASE%\docreel.jar"</arguments>
 
   <env name="DOCREEL_HOME" value="%BASE%\data-root"/>
   <!-- In jobId (MDC) ở mọi dòng log, kể cả log stdout mà WinSW ghi file (SPEC 13: log theo jobId) -->
