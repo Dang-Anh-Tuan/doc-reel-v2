@@ -23,6 +23,34 @@ class FfmpegCommandBuilderTest {
                 + ":x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=" + frames + ":s=1080x1920:fps=30,setsar=1[v" + i + "]";
     }
 
+    private static String still(int i, int frames) {
+        return "[" + i + ":v]scale=1080:1920,zoompan=z=1:d=" + frames + ":s=1080x1920:fps=30,setsar=1[v" + i + "]";
+    }
+
+    @Test
+    void defaultIsStillSlideWithoutZoom() {
+        assertThat(VideoSettings.DEFAULT.zoom()).isFalse();
+        Timeline t = planner.plan(List.of(new SceneTiming("a", List.of(5.0)), new SceneTiming("b", List.of(7.0))), 0.3);
+        String cmd = String.join(
+                " ",
+                builder.build(
+                        "ffmpeg",
+                        t,
+                        List.of(Path.of("i0.png"), Path.of("i1.png")),
+                        List.of(Path.of("a0.mp3"), Path.of("a1.mp3")),
+                        null,
+                        Path.of("out.mp4"),
+                        VideoSettings.DEFAULT));
+
+        assertThat(cmd)
+                .isEqualTo(HEAD + "-i i0.png -i i1.png -i a0.mp3 -i a1.mp3 -filter_complex "
+                        + still(0, 159) + ";" + still(1, 210)
+                        + ";[v0][v1]xfade=transition=fade:duration=0.3:offset=5[x1]"
+                        + ";[x1]format=yuv420p[vout]"
+                        + ";[2:a][3:a]concat=n=2:v=0:a=1[aout]" + TAIL)
+                .doesNotContain("zoom+");
+    }
+
     private String build(List<SceneTiming> scenes, int files, String srt) {
         Timeline t = planner.plan(scenes, 0.3);
         List<Path> images = new ArrayList<>();
@@ -32,7 +60,7 @@ class FfmpegCommandBuilderTest {
             audios.add(Path.of("a" + i + ".mp3"));
         }
         return String.join(
-                " ", builder.build("ffmpeg", t, images, audios, srt, Path.of("out.mp4"), VideoSettings.DEFAULT));
+                " ", builder.build("ffmpeg", t, images, audios, srt, Path.of("out.mp4"), VideoSettings.ZOOM));
     }
 
     @Test

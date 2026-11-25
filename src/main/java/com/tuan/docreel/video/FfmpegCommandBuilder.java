@@ -7,7 +7,8 @@ import java.util.Locale;
 import org.springframework.stereotype.Component;
 
 /**
- * Dựng lệnh ffmpeg: mỗi ảnh → zoompan (d = số frame theo d_i×fps) → xfade nối tiếp; audio concat; tuỳ chọn burn .srt.
+ * Dựng lệnh ffmpeg: mỗi ảnh → clip d_i×fps frame (tĩnh, hoặc zoom chậm nếu {@link VideoSettings#zoom()}) → xfade nối
+ * tiếp; audio concat; tuỳ chọn burn .srt.
  * Thuần chuỗi, không chạy gì (test snapshot).
  */
 @Component
@@ -73,6 +74,12 @@ public class FfmpegCommandBuilder {
 
     private static String zoomClip(int i, double clipSeconds, VideoSettings s) {
         int frames = Math.max(1, (int) Math.round(clipSeconds * s.fps()));
+        if (!s.zoom()) {
+            // Slide tĩnh: zoompan z=1 chỉ để nhân 1 ảnh thành đúng `frames` khung (giữ nguyên cách tính thời lượng)
+            return "[" + i + ":v]scale=" + s.width() + ":" + s.height()
+                    + ",zoompan=z=1:d=" + frames + ":s=" + s.width() + "x" + s.height() + ":fps=" + s.fps()
+                    + ",setsar=1[v" + i + "]";
+        }
         String step = String.format(Locale.ROOT, "%.6f", (s.maxZoom() - 1) / frames);
         return "[" + i + ":v]scale=" + s.width() * 3 / 2 + ":" + s.height() * 3 / 2
                 + ",zoompan=z='min(zoom+" + step + "," + num(s.maxZoom()) + ")'"

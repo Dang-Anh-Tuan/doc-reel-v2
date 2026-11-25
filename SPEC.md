@@ -9,7 +9,7 @@
 
 | Trong MVP | Bản 2 |
 |---|---|
-| Video **SLIDES**: ảnh tĩnh + zoom/fade bằng FFmpeg | Video **CHEATSHEET**: lưới thẻ có animation (chụp từng frame) |
+| Video **SLIDES**: ảnh tĩnh + fade bằng FFmpeg (zoom tắt từ 25/11/2026, bật lại bằng `VideoSettings.maxZoom` > 1) | Video **CHEATSHEET**: lưới thẻ có animation (chụp từng frame) |
 | Input JSON thả vào `inbox/` hoặc gửi qua REST | **Trang quản trị** trong `web/` (mục 7.2): job + trạng thái, gửi JSON, **danh sách video** (link, view, like, comment), **cấu hình giọng đọc / tốc độ** (nghe thử), quota TTS |
 | `web/` (React + TS): khung app + **Template preview** (dev) | |
 | Cấu hình giọng/tốc độ là hằng số trong `application.yml` (đọc qua `TtsSettingsProvider`) | Sửa trên web, lưu DB, ghi đè `application.yml` |
@@ -36,7 +36,7 @@ Phần AI soạn JSON nằm **ngoài** app (scheduled task của Claude ghi file
 | Chụp | Playwright Java, chờ `body[data-ready="1"]`, đọc `data-problems` | Kiểm lỗi bằng code, không dùng AI |
 | Giọng chính | ElevenLabs API (gói Free), model `eleven_flash_v2_5` (có tiếng Việt) | Giọng tự nhiên nhất; free ~10k credit/tháng |
 | Giọng dự phòng | **edge-tts** (Python CLI, giọng Neural `vi-VN` của Edge) qua `ProcessRunner` | Miễn phí, không cần tài khoản / key / thẻ; không chính thức nên có rủi ro hỏng tạm (mục 8) |
-| Video | FFmpeg: `zoompan` + `xfade` + burn `.srt` | Đủ đẹp cho MVP |
+| Video | FFmpeg: slide tĩnh (`zoompan z=1` để nhân khung) + `xfade` + burn `.srt` | Đủ đẹp cho MVP; người dùng bỏ hiệu ứng zoom |
 | Upload | YouTube Data API v3, OAuth, `privacyStatus=private` | Project chưa audit sẽ bị ép private |
 | Config | `application.yml` + biến môi trường / `.env` | Không gắn chặt với Windows |
 | Web (preview + quản trị) | React 19 + **TypeScript** (strict) + Vite 8, react-router 8, CSS Modules, Vitest, ESLint | Dự án riêng `web/`; build ra `static/admin` để Spring phục vụ, không cần server thứ hai (mục 7.1) |
