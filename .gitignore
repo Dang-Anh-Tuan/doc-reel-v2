@@ -30,3 +30,6 @@ requests/
 .worktrees/
 .claude/worktrees/
 data/youtube-token.enc
+
+# mẫu nghe thử giọng (tạo bằng tools/voice-ab.ps1)
+tools/voice-samples/
