@@ -158,8 +158,48 @@ class TtsUsageControllerTest {
         Duration took = Duration.ofNanos(System.nanoTime() - start);
 
         assertThat(view.available()).isFalse();
-        assertThat(took).isLessThan(Duration.ofSeconds(7)); // timeout riêng 5 s, không phải 60 s của TTS
+        // timeout riêng 5 s × (1 lần + 1 lần thử lại), không phải 60 s của TTS
+        assertThat(took).isLessThan(Duration.ofSeconds(12));
         assertThat(ElevenLabsProvider.SUBSCRIPTION_TIMEOUT).isEqualTo(Duration.ofSeconds(5));
+        wm.verify(2, getRequestedFor(urlPathEqualTo("/v1/user/subscription")));
+    }
+
+    @Test
+    void transientTimeoutIsRetriedOnceAndSucceeds() {
+        wm.stubFor(get(urlPathEqualTo("/v1/user/subscription"))
+                .inScenario("cham-roi-nhanh")
+                .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)
+                .willReturn(aResponse().withStatus(200).withFixedDelay(8_000).withBody("{}"))
+                .willSetStateTo("nhanh"));
+        wm.stubFor(get(urlPathEqualTo("/v1/user/subscription"))
+                .inScenario("cham-roi-nhanh")
+                .whenScenarioStateIs("nhanh")
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"character_count\":259,\"character_limit\":40000}")));
+        mvc(KEY);
+
+        TtsUsageView view = service.usage();
+
+        assertThat(view.available()).isTrue();
+        assertThat(view.used()).isEqualTo(259L);
+    }
+
+    @Test
+    void errorIsCachedOnlyBrieflyThenRefetched() throws Exception {
+        stubSubscription(500, "{}");
+        MockMvc mvc = mvc(KEY);
+        mvc.perform(MockMvcRequestBuilders.get("/api/tts/usage"))
+                .andExpect(jsonPath("$.available").value(false));
+
+        stubSubscription(200, "{\"character_count\":1,\"character_limit\":10}");
+        now.set(now.get().plusSeconds(5)); // trong ERROR_TTL: vẫn lỗi cũ, không gọi dồn
+        mvc.perform(MockMvcRequestBuilders.get("/api/tts/usage"))
+                .andExpect(jsonPath("$.available").value(false));
+        now.set(now.get().plusSeconds(6)); // quá 10 s → gọi lại, hết lỗi
+        mvc.perform(MockMvcRequestBuilders.get("/api/tts/usage"))
+                .andExpect(jsonPath("$.available").value(true));
     }
 
     @Test

@@ -22,6 +22,9 @@ public class TtsUsageService {
 
     static final long TTL_SECONDS = 60;
     private static final Duration TTL = Duration.ofSeconds(TTL_SECONDS);
+    /** Lỗi chỉ giữ ngắn: lỗi mạng thoáng qua không làm thẻ quota báo lỗi cả phút. */
+    static final Duration ERROR_TTL = Duration.ofSeconds(10);
+
     private static final String PROVIDER = TtsProviderName.ELEVENLABS.name();
     private static final Logger log = LoggerFactory.getLogger(TtsUsageService.class);
 
@@ -68,12 +71,16 @@ public class TtsUsageService {
 
     private TtsUsageView fresh() {
         Cached c = cached;
-        return c != null && clock.instant().isBefore(c.at().plus(TTL)) ? c.view() : null;
+        if (c == null) {
+            return null;
+        }
+        Duration ttl = c.view().available() ? TTL : ERROR_TTL;
+        return clock.instant().isBefore(c.at().plus(ttl)) ? c.view() : null;
     }
 
     private TtsUsageView fetch() {
         try {
-            return TtsUsageView.of(PROVIDER, elevenLabs.subscription(), creditsPerChar);
+            return TtsUsageView.of(PROVIDER, subscriptionWithOneRetry(), creditsPerChar);
         } catch (TtsException e) {
             // message của provider chỉ có mã HTTP / lỗi mạng, không chứa key
             log.warn("Không lấy được quota ElevenLabs: {}", e.getMessage());
@@ -81,6 +88,16 @@ public class TtsUsageService {
         } catch (RuntimeException e) {
             log.warn("Không đọc được quota ElevenLabs: {}", e.toString());
             return TtsUsageView.unavailable(PROVIDER, "Không đọc được phản hồi ElevenLabs", creditsPerChar);
+        }
+    }
+
+    /** Lỗi mạng / timeout (thường do kết nối cũ trong pool hoặc ElevenLabs chậm thoáng qua) → thử lại đúng 1 lần. */
+    private ElevenLabsProvider.Subscription subscriptionWithOneRetry() {
+        try {
+            return elevenLabs.subscription();
+        } catch (TtsTransientException e) {
+            log.info("Đọc quota ElevenLabs lỗi tạm ({}), thử lại 1 lần", e.getMessage());
+            return elevenLabs.subscription();
         }
     }
 }
