@@ -30,7 +30,7 @@ final class VoiceFixtures {
                 new AppProperties.Tts(
                         TtsProviderName.ELEVENLABS,
                         TtsProviderName.EDGE,
-                        new AppProperties.ElevenLabs(apiKey, elevenBase, "eleven_flash_v2_5", "voice1", 1.0),
+                        AppProperties.ElevenLabs.withDefaults(apiKey, elevenBase, "eleven_flash_v2_5", "voice1", 1.0),
                         new AppProperties.Edge(edgeCommand, "vi-VN-HoaiMyNeural", "+0%", pauseMs)),
                 new AppProperties.SelfCheck(Duration.ofMinutes(15)));
     }
@@ -38,6 +38,27 @@ final class VoiceFixtures {
     static VoiceSettings settings() {
         return new VoiceSettings(
                 TtsProviderName.ELEVENLABS, TtsProviderName.EDGE, "voice1", 1.0, "vi-VN-HoaiMyNeural", "+0%");
+    }
+
+    /** Như {@link #settings()} nhưng tinh chỉnh ElevenLabs tùy ý. */
+    static VoiceSettings settings(ElevenTuning tuning) {
+        return new VoiceSettings(
+                TtsProviderName.ELEVENLABS, TtsProviderName.EDGE, "voice1", 1.0, "vi-VN-HoaiMyNeural", "+0%", tuning);
+    }
+
+    /** Mặc định nhưng bật lexicon cho ElevenLabs (hành vi trước P8b). */
+    static ElevenTuning withLexicon() {
+        ElevenTuning d = ElevenTuning.DEFAULTS;
+        return new ElevenTuning(
+                d.model(),
+                d.languageCode(),
+                d.stability(),
+                d.similarityBoost(),
+                d.style(),
+                d.speakerBoost(),
+                d.textNormalization(),
+                d.sendContext(),
+                true);
     }
 
     static VideoScript script(Scene... scenes) {

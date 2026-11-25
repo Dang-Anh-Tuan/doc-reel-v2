@@ -52,6 +52,12 @@ class TtsServiceTest {
             return "stub";
         }
 
+        /** Giống provider thật: edge luôn áp lexicon, ElevenLabs theo {@code applyLexicon} của job. */
+        @Override
+        public boolean appliesLexicon(VoiceSettings settings) {
+            return name == TtsProviderName.EDGE || settings.eleven().applyLexicon();
+        }
+
         @Override
         public byte[] synthesize(String sentence, String previous, String next, VoiceSettings settings) {
             received.add(sentence);
@@ -120,7 +126,8 @@ class TtsServiceTest {
         var script = VoiceFixtures.script(
                 VoiceFixtures.title("s01", "JPA là gì. Rất hay."),
                 VoiceFixtures.quiz("s02", "Chọn đáp án.", "Đáp án là A."));
-        VoiceResult result = svc.voice(script, root.resolve("work/j1"), VoiceFixtures.settings(), null);
+        VoiceResult result =
+                svc.voice(script, root.resolve("work/j1"), VoiceFixtures.settings(VoiceFixtures.withLexicon()), null);
 
         assertThat(result.provider()).isEqualTo(TtsProviderName.ELEVENLABS);
         assertThat(result.audios()).extracting(VoiceResult.UnitAudio::name).containsExactly("s01", "s02", "s02-reveal");
@@ -144,15 +151,70 @@ class TtsServiceTest {
         StubProvider eleven = new StubProvider(TtsProviderName.ELEVENLABS, true, 1_000_000);
         StubProvider edge = new StubProvider(TtsProviderName.EDGE, true, Long.MAX_VALUE);
         TtsService svc = service(new Lexicon(lexFile, false), new RecordingUsage(), eleven, edge);
-
         var script = VoiceFixtures.script(VoiceFixtures.title("s01", "JPA là gì. Rất hay."));
-        VoiceResult result = svc.voice(script, root.resolve("work/j1"), VoiceFixtures.settings(), null);
 
-        // "Giê Pi Ây là gì." (16, sau lexicon; gốc "JPA là gì." chỉ 10) + "Rất hay." (8)
-        long sent = eleven.received.stream().mapToLong(String::length).sum();
-        assertThat(result.ttsChars()).isEqualTo(24).isEqualTo(sent);
+        // ElevenLabs (applyLexicon mặc định false): gửi text gốc "JPA là gì." (10) + "Rất hay." (8)
+        VoiceResult viaEleven = svc.voice(script, root.resolve("work/j1"), VoiceFixtures.settings(), null);
+        assertThat(eleven.received).containsExactly("JPA là gì.", "Rất hay.");
+        assertThat(viaEleven.ttsChars()).isEqualTo(18);
+
+        // edge: luôn sau lexicon "Giê Pi Ây là gì." (16) + "Rất hay." (8)
+        VoiceSettings edgeOnly =
+                new VoiceSettings(TtsProviderName.EDGE, TtsProviderName.EDGE, "v", 1.0, "vi-VN-HoaiMyNeural", "+0%");
+        VoiceResult viaEdge = svc.voice(script, root.resolve("work/j2"), edgeOnly, null);
+        long sent = edge.received.stream().mapToLong(String::length).sum();
+        assertThat(edge.received).containsExactly("Giê Pi Ây là gì.", "Rất hay.");
+        assertThat(viaEdge.ttsChars()).isEqualTo(24).isEqualTo(sent);
         // 1.6 s + 0.8 s + đệm 0.2 + 0.4 = 3.0 s
-        assertThat(result.audioMs()).isEqualTo(3000);
+        assertThat(viaEdge.audioMs()).isEqualTo(3000);
+    }
+
+    @Test
+    void elevenLabsKeepsEnglishTermsWhileEdgeGetsPhoneticSpelling() throws IOException {
+        Path lexFile = root.resolve("lexicon.yaml");
+        Files.writeString(lexFile, "React: \"Rì-ách\"\nuseEffect: \"iu-ì-phếch\"\n", StandardCharsets.UTF_8);
+        StubProvider eleven = new StubProvider(TtsProviderName.ELEVENLABS, true, 1_000_000) {
+            @Override
+            public byte[] synthesize(String s, String p, String n, VoiceSettings st) {
+                if (s.startsWith("Hết")) {
+                    throw new TtsQuotaExceededException("hết");
+                }
+                return super.synthesize(s, p, n, st);
+            }
+        };
+        StubProvider edge = new StubProvider(TtsProviderName.EDGE, true, Long.MAX_VALUE);
+        TtsService svc = service(new Lexicon(lexFile, false), new RecordingUsage(), eleven, edge);
+
+        // ElevenLabs đọc câu 1 (giữ nguyên tiếng Anh) rồi hết quota → edge đọc lại toàn bộ, có phiên âm
+        VoiceResult result = svc.voice(
+                VoiceFixtures.script(VoiceFixtures.title("s01", "React dùng useEffect. Hết quota.")),
+                root.resolve("work/j1"),
+                VoiceFixtures.settings(),
+                null);
+
+        assertThat(eleven.received).containsExactly("React dùng useEffect.");
+        assertThat(edge.received).containsExactly("Rì-ách dùng iu-ì-phếch.", "Hết quota.");
+        assertThat(result.provider()).isEqualTo(TtsProviderName.EDGE);
+        String srt = Files.readString(result.srt(), StandardCharsets.UTF_8);
+        assertThat(srt).contains("React dùng useEffect.").doesNotContain("Rì-ách");
+    }
+
+    @Test
+    void quotaCheckCountsTextAsPrimaryWillSendIt() throws IOException {
+        Path lexFile = root.resolve("lexicon.yaml");
+        Files.writeString(lexFile, "JPA: \"Giê Pi Ây Giê Pi Ây\"\n", StandardCharsets.UTF_8);
+        // "JPA." = 4 ký tự gốc → cần 4 × 1.1 ≤ 5; sau lexicon 20 ký tự → không đủ
+        StubProvider eleven = new StubProvider(TtsProviderName.ELEVENLABS, true, 5);
+        StubProvider edge = new StubProvider(TtsProviderName.EDGE, true, Long.MAX_VALUE);
+        TtsService svc = service(new Lexicon(lexFile, false), new RecordingUsage(), eleven, edge);
+        var script = VoiceFixtures.script(VoiceFixtures.title("s01", "JPA."));
+
+        assertThat(svc.voice(script, root.resolve("work/j1"), VoiceFixtures.settings(), null)
+                        .provider())
+                .isEqualTo(TtsProviderName.ELEVENLABS);
+        assertThat(svc.voice(script, root.resolve("work/j2"), VoiceFixtures.settings(VoiceFixtures.withLexicon()), null)
+                        .provider())
+                .isEqualTo(TtsProviderName.EDGE);
     }
 
     @Test

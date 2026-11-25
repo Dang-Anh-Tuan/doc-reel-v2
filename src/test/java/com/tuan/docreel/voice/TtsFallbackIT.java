@@ -140,10 +140,72 @@ class TtsFallbackIT {
         VoiceResult result = voice(service());
 
         assertThat(result.provider()).isEqualTo(TtsProviderName.ELEVENLABS);
+        // equalToJson chặt: không thừa field nào
         wm.verify(postRequestedFor(urlPathEqualTo(TTS_PATH)).withRequestBody(equalToJson("""
-                        {"text":"Câu hai.","model_id":"eleven_flash_v2_5","voice_settings":{"speed":1.0},
+                        {"text":"Câu hai.","model_id":"eleven_flash_v2_5","language_code":"vi",
+                         "voice_settings":{"stability":0.4,"similarity_boost":0.8,"style":0.2,
+                                           "use_speaker_boost":true,"speed":1.0},
+                         "apply_text_normalization":"on",
                          "previous_text":"Câu một.","next_text":"Câu ba."}
                         """)));
+        // câu đầu không có previous_text (không gửi null)
+        wm.verify(postRequestedFor(urlPathEqualTo(TTS_PATH)).withRequestBody(equalToJson("""
+                        {"text":"Câu một.","model_id":"eleven_flash_v2_5","language_code":"vi",
+                         "voice_settings":{"stability":0.4,"similarity_boost":0.8,"style":0.2,
+                                           "use_speaker_boost":true,"speed":1.0},
+                         "apply_text_normalization":"on","next_text":"Câu hai."}
+                        """)));
+    }
+
+    @Test
+    void emptyOrNullTuningIsLeftOutOfRequestAndContextCanBeDisabled() {
+        stubTts("Câu một.", 200, "");
+        stubTts("Câu hai.", 200, "");
+        stubTts("Câu ba.", 200, "");
+        VoiceSettings bare =
+                VoiceFixtures.settings(new ElevenTuning("eleven_v3", "", null, null, null, null, "", false, false));
+
+        VoiceResult result = service()
+                .voice(
+                        VoiceFixtures.script(VoiceFixtures.title("s01", SCRIPT_TEXT)),
+                        root.resolve("work/j1"),
+                        bare,
+                        null);
+
+        assertThat(result.provider()).isEqualTo(TtsProviderName.ELEVENLABS);
+        wm.verify(postRequestedFor(urlPathEqualTo(TTS_PATH)).withRequestBody(equalToJson("""
+                        {"text":"Câu hai.","model_id":"eleven_v3","voice_settings":{"speed":1.0}}
+                        """)));
+        wm.verify(0, postRequestedFor(urlPathEqualTo(TTS_PATH)).withRequestBody(matchingJsonPath("$.previous_text")));
+        wm.verify(0, postRequestedFor(urlPathEqualTo(TTS_PATH)).withRequestBody(matchingJsonPath("$.language_code")));
+    }
+
+    @Test
+    void elevenLabsGetsEnglishTermsVerbatimWhileEdgeGetsLexicon() throws Exception {
+        Path lex = root.resolve("lexicon.yaml");
+        Files.writeString(lex, "React: \"Rì-ách\"\nuseEffect: \"iu-ì-phếch\"\n");
+        AppProperties props = VoiceFixtures.props(root, URI.create(wm.baseUrl()), "test-key", "edge-tts", 0);
+        TtsService svc = new TtsService(
+                List.of(new ElevenLabsProvider(props), new EdgeTtsProvider(inProcessEdge(), props)),
+                new Lexicon(lex, false),
+                new TtsCache(props),
+                new FakeAudioTool(),
+                (provider, chars) -> usage.add(provider + ":" + chars));
+        String sentence = "React gọi useEffect sau khi render.";
+        stubTts(sentence, 200, "");
+        var script = VoiceFixtures.script(VoiceFixtures.title("s01", sentence));
+
+        svc.voice(script, root.resolve("work/j1"), VoiceFixtures.settings(), null);
+        wm.verify(
+                1,
+                postRequestedFor(urlPathEqualTo(TTS_PATH))
+                        .withRequestBody(matchingJsonPath("$.text", equalTo(sentence))));
+        assertThat(usage).containsExactly("ELEVENLABS:" + sentence.length()); // đếm text thực gửi (gốc)
+
+        VoiceSettings edgeOnly =
+                new VoiceSettings(TtsProviderName.EDGE, TtsProviderName.EDGE, "v", 1.0, "vi-VN-HoaiMyNeural", "+0%");
+        svc.voice(script, root.resolve("work/j2"), edgeOnly, null);
+        assertThat(edgeSentences).containsExactly("Rì-ách gọi iu-ì-phếch sau khi render.");
     }
 
     @Test

@@ -23,7 +23,7 @@ public final class TestAppProperties {
                 new AppProperties.Tts(
                         AppProperties.TtsProviderName.ELEVENLABS,
                         AppProperties.TtsProviderName.EDGE,
-                        new AppProperties.ElevenLabs(
+                        AppProperties.ElevenLabs.withDefaults(
                                 "", URI.create("http://localhost:1"), "eleven_flash_v2_5", "TODO_CHON_SAU", 1.0),
                         new AppProperties.Edge("edge-tts", "vi-VN-HoaiMyNeural", "+0%", 300)),
                 new AppProperties.SelfCheck(Duration.ofMinutes(15)));

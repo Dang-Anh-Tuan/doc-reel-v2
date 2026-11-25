@@ -23,12 +23,21 @@ public class YamlTtsSettingsProvider implements TtsSettingsProvider {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("primary", tts.primary().name());
         m.put("fallback", tts.fallback().name());
-        m.put(
-                "elevenlabs",
-                Map.of(
-                        "model", tts.elevenlabs().model(),
-                        "voiceId", tts.elevenlabs().voiceId(),
-                        "speed", tts.elevenlabs().speed()));
+        AppProperties.ElevenLabs el = tts.elevenlabs();
+        // LinkedHashMap: giữ null (= "không gửi field") trong ảnh chụp, khác với "vắng mặt" (= mặc định, job cũ)
+        Map<String, Object> eleven = new LinkedHashMap<>();
+        eleven.put("model", el.model());
+        eleven.put("voiceId", el.voiceId());
+        eleven.put("speed", el.speed());
+        eleven.put("languageCode", el.languageCode() == null ? "" : el.languageCode());
+        eleven.put("stability", el.stability());
+        eleven.put("similarityBoost", el.similarityBoost());
+        eleven.put("style", el.style());
+        eleven.put("speakerBoost", el.speakerBoost());
+        eleven.put("textNormalization", el.textNormalization() == null ? "" : el.textNormalization());
+        eleven.put("sendContext", el.sendContext());
+        eleven.put("applyLexicon", el.applyLexicon());
+        m.put("elevenlabs", eleven);
         m.put("edge", Map.of("voice", tts.edge().voice(), "rate", tts.edge().rate()));
         return new TtsSettings(tts.primary().name(), MAPPER.writeValueAsString(m));
     }

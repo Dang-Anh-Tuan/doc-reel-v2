@@ -108,4 +108,73 @@ class AppPropertiesTest {
             assertThat(el.toString()).contains("apiKey=<empty>");
         });
     }
+
+    @Test
+    void elevenLabsTuningHasCodeDefaultsWhenAbsent() {
+        runnerWith(validProperties()).run(ctx -> {
+            assertThat(ctx).hasNotFailed();
+            AppProperties.ElevenLabs el = ctx.getBean(AppProperties.class).tts().elevenlabs();
+            assertThat(el.languageCode()).isEqualTo("vi");
+            assertThat(el.stability()).isEqualTo(0.4);
+            assertThat(el.similarityBoost()).isEqualTo(0.8);
+            assertThat(el.style()).isEqualTo(0.2);
+            assertThat(el.speakerBoost()).isTrue();
+            assertThat(el.textNormalization()).isEqualTo("on");
+            assertThat(el.sendContext()).isTrue();
+            assertThat(el.applyLexicon()).isFalse();
+            assertThat(el)
+                    .isEqualTo(AppProperties.ElevenLabs.withDefaults(
+                            el.apiKey(), el.baseUrl(), el.model(), el.voiceId(), el.speed()));
+        });
+    }
+
+    @Test
+    void elevenLabsTuningCanBeOverriddenOrBlanked() {
+        Map<String, String> props = validProperties();
+        props.put("docreel.tts.elevenlabs.language-code", "");
+        props.put("docreel.tts.elevenlabs.text-normalization", "auto");
+        props.put("docreel.tts.elevenlabs.stability", "0.6");
+        props.put("docreel.tts.elevenlabs.send-context", "false");
+        props.put("docreel.tts.elevenlabs.apply-lexicon", "true");
+
+        runnerWith(props).run(ctx -> {
+            assertThat(ctx).hasNotFailed();
+            AppProperties.ElevenLabs el = ctx.getBean(AppProperties.class).tts().elevenlabs();
+            assertThat(el.languageCode()).isEmpty();
+            assertThat(el.textNormalization()).isEqualTo("auto");
+            assertThat(el.stability()).isEqualTo(0.6);
+            assertThat(el.sendContext()).isFalse();
+            assertThat(el.applyLexicon()).isTrue();
+        });
+    }
+
+    @Test
+    void failsToStartWhenTuningInvalid() {
+        Map<String, String> norm = validProperties();
+        norm.put("docreel.tts.elevenlabs.text-normalization", "yes");
+        runnerWith(norm).run(ctx -> assertThat(ctx).hasFailed());
+
+        Map<String, String> stability = validProperties();
+        stability.put("docreel.tts.elevenlabs.stability", "1.5");
+        runnerWith(stability).run(ctx -> assertThat(ctx).hasFailed());
+    }
+
+    @Test
+    void unquotedYamlOnOffBecomeNormalizationValues() {
+        Map<String, String> props = validProperties();
+        props.put("docreel.tts.elevenlabs.text-normalization", "true");
+        runnerWith(props)
+                .run(ctx -> assertThat(ctx.getBean(AppProperties.class)
+                                .tts()
+                                .elevenlabs()
+                                .textNormalization())
+                        .isEqualTo("on"));
+        props.put("docreel.tts.elevenlabs.text-normalization", "false");
+        runnerWith(props)
+                .run(ctx -> assertThat(ctx.getBean(AppProperties.class)
+                                .tts()
+                                .elevenlabs()
+                                .textNormalization())
+                        .isEqualTo("off"));
+    }
 }
