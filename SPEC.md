@@ -483,6 +483,8 @@ erDiagram
       string youtube_id
       string tts_provider
       jsonb tts_settings "giọng + tốc độ chụp lúc tạo job"
+      bigint tts_chars "P13b: ký tự thực gửi TTS (không tính cache)"
+      bigint audio_ms "P13b: tổng độ dài audio"
       string source_channel "inbox / rest / telegram / zalo"
       string source_ref "chatId:messageId"
       jsonb script
@@ -743,6 +745,9 @@ Adapter bật/tắt bằng `@ConditionalOnProperty(...enabled)` → tắt thì b
 | POST | `/api/tts/preview` | Đọc thử 1 câu ≤ 200 ký tự → `audio/mpeg` | 200; 400; 429 hết quota |
 | GET | `/api/tts/usage?month=` | Ký tự đã dùng / giới hạn theo provider | 200 |
 | GET | `/api/system/check` | Kết quả tự kiểm tra lúc chạy (mục 12.1) | 200 |
+| GET | `/api/tts/usage` | P13b: credit ElevenLabs đã dùng / hạn mức (từ `/v1/user/subscription`, cache 60 s) + `creditsPerChar`; lỗi → `available:false` | 200 |
+
+P13b: `GET /api/jobs/{id}` có thêm khối `cost {ttsProvider, ttsChars, estimatedCredits, estimatedUsd, audioMs, processingMs, wallMs}`; `GET /api/jobs` thêm `ttsChars`, `estimatedUsd`. Ước tính theo `docreel.tts.elevenlabs.credits-per-char` × `usd-per-credit`.
 
 Lỗi trả theo format chung (`@RestControllerAdvice` + `ProblemDetail`) — web hiển thị `title` + `detail` của ProblemDetail.
 

@@ -57,6 +57,10 @@ docreel:
       model: eleven_flash_v2_5
       voice-id: "2VozU7Otb8AvGqzNAtnE"  # Ngọc Anh (warm and clear), đã chọn ở G2
       speed: 1.0                      # voice_settings.speed, 0.7–1.2
+      # P13b: ước tính chi phí mỗi video (số thật cả tháng: thẻ "ElevenLabs tháng này" / GET /api/tts/usage).
+      # Chỉnh credits-per-char khi so được với credit thật (Flash có thể ~0.5).
+      credits-per-char: 1.0
+      usd-per-credit: 0.0002          # Starter: 6 USD / 30.000 credit
     edge:
       command: edge-tts               # hoặc đường dẫn đầy đủ tới edge-tts(.exe)
       voice: vi-VN-HoaiMyNeural       # hoặc vi-VN-NamMinhNeural
