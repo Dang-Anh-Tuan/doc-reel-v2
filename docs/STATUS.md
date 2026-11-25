@@ -18,7 +18,7 @@
 | B-W1 | P12 nền web quản trị | ✅ merged | phase/p12 | ĐẠT | ĐẠT | docs/explain/P12.md |
 | B-W2 | P13 jobs qua web | ✅ merged | phase/p13 | ĐẠT | ĐẠT | docs/explain/P13.md |
 | B-W2 | P13b chi phí mỗi video + lỗi thu gọn | ✅ merged | phase/p13b | ĐẠT | ĐẠT | docs/explain/P13b.md |
-| B-W2 | P8b giọng ElevenLabs tự nhiên (vi) | ⏳ | | | | |
+| B-W2 | P8b giọng ElevenLabs tự nhiên (vi) | ✅ merged (chờ nghe thử) | phase/p8b | ĐẠT | ĐẠT | docs/explain/P8b.md |
 
 Cổng: G0 ✅ · G1 ✅ · G2 ✅ · G3 ✅ · G4 ✅ (token YouTube 2026-11-24) · G5 ⏳
 

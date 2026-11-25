@@ -57,6 +57,16 @@ docreel:
       model: eleven_flash_v2_5
       voice-id: "2VozU7Otb8AvGqzNAtnE"  # Ngọc Anh (warm and clear), đã chọn ở G2
       speed: 1.0                      # voice_settings.speed, 0.7–1.2
+      # P8b: đọc tiếng Việt tự nhiên. Đổi sang model không hỗ trợ field nào thì để rỗng field đó
+      # (vd eleven_v3/v4: thử send-context: false nếu bị 400; multilingual_v2 không hỗ trợ tiếng Việt).
+      language-code: vi               # buộc ngôn ngữ + chuẩn hóa theo tiếng Việt
+      stability: 0.4                  # thấp = biểu cảm hơn, cao = đều đều (mặc định ElevenLabs 0.5)
+      similarity-boost: 0.8
+      style: 0.2
+      speaker-boost: true
+      text-normalization: "on"        # Flash mặc định tắt → đọc số kém; giữ ngoặc kép
+      send-context: true              # gửi previous_text / next_text để nối câu liền mạch
+      apply-lexicon: false            # ElevenLabs đọc được từ tiếng Anh; lexicon chỉ cho edge-tts
       # P13b: ước tính chi phí mỗi video (số thật cả tháng: thẻ "ElevenLabs tháng này" / GET /api/tts/usage).
       # Chỉnh credits-per-char khi so được với credit thật (Flash có thể ~0.5).
       credits-per-char: 1.0
