@@ -44,12 +44,16 @@ public class YouTubeUploadStep implements Step {
         MDC.put("jobId", ctx.jobId().toString());
         try {
             Path idFile = ctx.workDir().resolve(ID_FILE);
-            if (Files.isRegularFile(idFile)) {
-                log.info("Job đã có youtube id, bỏ qua upload");
-                return new StepResult(JobState.UPLOADED, true);
+            boolean alreadyUploaded = Files.isRegularFile(idFile);
+            String id;
+            if (alreadyUploaded) {
+                // Lần trước upload xong nhưng hỏng ở bước playlist (job chưa UPLOADED) → không upload lại, chỉ làm nốt
+                id = Files.readString(idFile).strip();
+                log.info("Job đã có youtube id {}, bỏ qua upload, thêm vào playlist", id);
+            } else {
+                id = uploader.upload(ctx.workDir().resolve(VIDEO_FILE), ctx.script());
+                Files.writeString(idFile, id);
             }
-            String id = uploader.upload(ctx.workDir().resolve(VIDEO_FILE), ctx.script());
-            Files.writeString(idFile, id);
             uploader.addToPlaylist(ctx.script().track(), id);
             events.publishEvent(new VideoUploadedEvent(
                     ctx.jobId(),
@@ -58,7 +62,7 @@ public class YouTubeUploadStep implements Step {
                     ctx.script().track(),
                     ctx.script().title(),
                     YouTubeMetadata.PRIVATE));
-            return new StepResult(JobState.UPLOADED, false);
+            return new StepResult(JobState.UPLOADED, alreadyUploaded);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         } finally {

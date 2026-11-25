@@ -9,6 +9,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.stubbing.Scenario;
 import java.nio.file.Path;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -67,5 +68,26 @@ class YouTubePlaylistIT {
         assertThat(id).isEqualTo("PL_react");
         server.verify(0, postRequestedFor(urlPathEqualTo("/youtube/v3/playlists")));
         server.verify(1, postRequestedFor(urlPathEqualTo("/youtube/v3/playlistItems")));
+    }
+
+    @Test
+    void conflict409OnPlaylistItemIsRetriedThenSucceeds() {
+        server.stubFor(get(urlPathEqualTo("/youtube/v3/playlists"))
+                .willReturn(
+                        aResponse().withBody("{\"items\":[{\"id\":\"PL_java\",\"snippet\":{\"title\":\"Java\"}}]}")));
+        server.stubFor(post(urlPathEqualTo("/youtube/v3/playlistItems"))
+                .inScenario("409-roi-ok")
+                .whenScenarioStateIs(Scenario.STARTED)
+                .willReturn(aResponse().withStatus(409).withBody("{\"error\":{\"code\":409}}"))
+                .willSetStateTo("ok"));
+        server.stubFor(post(urlPathEqualTo("/youtube/v3/playlistItems"))
+                .inScenario("409-roi-ok")
+                .whenScenarioStateIs("ok")
+                .willReturn(aResponse().withBody("{\"id\":\"item1\"}")));
+
+        String id = YouTubeTestSupport.uploader(server, dir).addToPlaylist("Java", "vid1");
+
+        assertThat(id).isEqualTo("PL_java");
+        server.verify(2, postRequestedFor(urlPathEqualTo("/youtube/v3/playlistItems")));
     }
 }

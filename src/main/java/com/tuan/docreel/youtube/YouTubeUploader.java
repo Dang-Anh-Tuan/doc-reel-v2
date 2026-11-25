@@ -169,7 +169,8 @@ public class YouTubeUploader {
                     continue;
                 }
                 last = new YouTubeApiException(status, "YouTube trả HTTP " + status);
-                if (status / 100 != 5) {
+                // 409 (ABORTED/conflict) hay gặp thoáng qua ở playlistItems.insert ngay sau upload → thử lại như 5xx
+                if (status / 100 != 5 && status != 409) {
                     throw last;
                 }
                 log.warn("YouTube lỗi {} (lần {}/{})", status, attempt, props.maxAttempts());
