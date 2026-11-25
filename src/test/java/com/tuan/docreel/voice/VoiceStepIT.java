@@ -113,5 +113,7 @@ class VoiceStepIT {
 
         assertThat(seenVoices).containsExactly("voice-OLD");
         assertThat(result.ttsProvider()).isEqualTo("ELEVENLABS"); // P5 ghi vào job.tts_provider
+        assertThat(result.ttsChars()).isEqualTo("Một câu.".length()); // P13b: worker ghi vào job.tts_chars
+        assertThat(result.audioMs()).isPositive();
     }
 }

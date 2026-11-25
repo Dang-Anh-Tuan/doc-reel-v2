@@ -49,7 +49,9 @@ class JobControllerTest {
                 null,
                 null,
                 Instant.now(),
-                Instant.now());
+                Instant.now(),
+                0,
+                0);
     }
 
     @Test
@@ -127,7 +129,8 @@ class JobControllerTest {
                         Instant.now(),
                         Instant.now(),
                         List.of(),
-                        List.of()));
+                        List.of(),
+                        new JobDetail.Cost("EDGE", 0, 0, 0, null, 0, 0)));
         mvc.perform(get("/api/jobs/" + id))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(id.toString()))

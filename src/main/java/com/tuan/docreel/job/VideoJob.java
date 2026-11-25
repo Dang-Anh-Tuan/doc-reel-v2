@@ -68,6 +68,14 @@ public class VideoJob {
     @Column(nullable = false, columnDefinition = "jsonb")
     private String script;
 
+    /** Tổng ký tự thực gửi provider TTS (không tính câu từ cache), cộng dồn qua các lần voice. */
+    @Column(name = "tts_chars", nullable = false)
+    private long ttsChars;
+
+    /** Tổng độ dài audio lần voice gần nhất (ms); null = chưa voice. */
+    @Column(name = "audio_ms")
+    private Long audioMs;
+
     @Version
     private int version;
 
@@ -161,6 +169,15 @@ public class VideoJob {
         this.updatedAt = Instant.now();
     }
 
+    /** Ghi kết quả bước giọng: cộng dồn ký tự đã gửi provider, độ dài audio lấy lần mới nhất. */
+    public void recordVoiceUsage(long chars, long audioMillis) {
+        this.ttsChars += Math.max(0, chars);
+        if (audioMillis > 0) {
+            this.audioMs = audioMillis;
+        }
+        this.updatedAt = Instant.now();
+    }
+
     private void transitionTo(JobState next) {
         if (!state.canTransitionTo(next)) {
             throw new IllegalStateTransitionException(state, next);
@@ -211,6 +228,14 @@ public class VideoJob {
 
     public String getTtsProvider() {
         return ttsProvider;
+    }
+
+    public long getTtsChars() {
+        return ttsChars;
+    }
+
+    public Long getAudioMs() {
+        return audioMs;
     }
 
     public String getTtsSettings() {

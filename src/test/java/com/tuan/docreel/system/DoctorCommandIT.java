@@ -38,15 +38,17 @@ class DoctorCommandIT {
                 .contains("migration chưa chạy")
                 .contains("KẾT LUẬN: KHÔNG ĐẠT");
 
-        Flyway.configure()
+        Flyway flyway = Flyway.configure()
                 .dataSource(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())
-                .load()
-                .migrate();
+                .load();
+        flyway.migrate();
+        // version mới nhất thay đổi theo migration (orchestrator đánh số lại khi merge) → so với Flyway, không gõ cứng
+        String latest = flyway.info().current().getVersion().getVersion();
         Run afterMigrate = doctor(POSTGRES.getJdbcUrl());
 
         assertThat(afterMigrate.exitCode()).as(afterMigrate.output()).isZero();
         assertThat(afterMigrate.output())
-                .contains("schema v1")
+                .contains("schema v" + latest)
                 .contains("| Thư mục ")
                 .contains("KẾT LUẬN: ĐẠT");
     }

@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router";
 import type { JobSummary } from "@/domain/job";
 import { JobStateBadge } from "./JobStateBadge";
 import styles from "./JobsTable.module.css";
-import { formatTime, stepLabel } from "./model";
+import { formatTime, formatUsd, stepLabel } from "./model";
 import { RetryButton } from "./RetryButton";
 
 interface JobsTableProps {
@@ -13,7 +13,8 @@ interface JobsTableProps {
 }
 
 /**
- * Bảng job: topic, tiêu đề (link chi tiết), trạng thái (+ Retry khi FAILED), bước hiện tại, giọng, thời gian, YouTube.
+ * Bảng job: topic, tiêu đề (link chi tiết), trạng thái (+ Retry khi FAILED), bước hiện tại, giọng, ≈ USD, thời gian,
+ * YouTube.
  * Bấm vào bất kỳ chỗ nào trên dòng → mở chi tiết (trừ khi bấm vào link / nút / đang bôi chọn chữ).
  */
 export function JobsTable({ jobs, onRetried }: JobsTableProps) {
@@ -34,6 +35,9 @@ export function JobsTable({ jobs, onRetried }: JobsTableProps) {
             <th scope="col">Trạng thái</th>
             <th scope="col">Bước hiện tại</th>
             <th scope="col">Giọng</th>
+            <th scope="col" className={styles.num} title="Chi phí TTS ước tính">
+              ≈ USD
+            </th>
             <th scope="col">Tạo lúc</th>
             <th scope="col">Cập nhật</th>
             <th scope="col">YouTube</th>
@@ -62,6 +66,9 @@ export function JobsTable({ jobs, onRetried }: JobsTableProps) {
               </td>
               <td>{j.state === "UPLOADED" ? "Xong" : stepLabel(j.currentStep)}</td>
               <td className={styles.mono}>{j.ttsProvider ?? "—"}</td>
+              <td className={styles.num} title={`${j.ttsChars ?? 0} ký tự gửi TTS`}>
+                {j.ttsChars ? formatUsd(j.estimatedUsd).replace(" USD", "") : <span className={styles.faint}>—</span>}
+              </td>
               <td className={styles.time}>
                 <time dateTime={j.createdAt}>{formatTime(j.createdAt)}</time>
               </td>

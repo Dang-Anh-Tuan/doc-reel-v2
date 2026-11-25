@@ -123,3 +123,15 @@
 2. `scripts/check.ps1` (orchestrator): sau khi thêm plugin, bước 2 nên chạy `mvnw verify -Dskip.web` vì bước 3 đã lint/test/build web — tránh `npm ci` + build 2 lần.
 3. Môi trường / `scripts/check.ps1`: Node mặc định của nvm trên máy là **v20.19.5**; với Node 20, `npm test` (vitest 5 + jsdom 31 + undici) **hỏng ngay khi khởi động worker** (`undici/lib/interceptor/decompress.js: Cannot read properties of undefined (reading 'bind')`), kể cả test cũ. SPEC 7.1 yêu cầu Node ≥ 22.22 (máy có sẵn `nvm` v22.22.0). Đề xuất: `nvm use 22.22.0`, và/hoặc check.ps1 kiểm `node -v` ≥ 22.22 trước bước web, báo rõ cách sửa. P12 chạy kiểm tra bằng cách thêm `%LOCALAPPDATA%\nvm\v22.22.0` vào đầu PATH của phiên, không đổi nvm toàn máy.
 4. `PLAN.md`/`SPEC.md` (tùy chọn): ghi `GET /api/system/check?refresh=true` (chạy lại các mục ngay); mặc định trả kết quả gần nhất (rẻ, web gọi mỗi 60 s).
+
+# NEEDS (P13b)
+
+1. `src/main/resources/application.yml` (tùy chọn — code đã có mặc định qua `@Value`): thêm dưới `docreel.tts.elevenlabs`
+   ```yaml
+       credits-per-char: 1.0      # credit ElevenLabs / ký tự (Flash/Turbo v2.5 trên gói tự phục vụ thường 0.5)
+       usd-per-credit: 0.0002     # 6 USD / 30.000 credit (gói Starter)
+   ```
+   Lý do: chỉnh đơn giá ước tính chi phí mỗi video mà không phải sửa code.
+2. Migration: `V901__job_tts_cost.sql` là số tạm → đánh số lại (vd `V2__job_tts_cost.sql`) khi merge. Thêm `video_job.tts_chars BIGINT NOT NULL DEFAULT 0` (+ CHECK ≥ 0) và `video_job.audio_ms BIGINT`.
+3. `SPEC.md` mục 9 / 11 (orchestrator): ghi thêm 2 cột trên, khối `cost` trong `GET /api/jobs/{id}`, `ttsChars` + `estimatedUsd` trong `GET /api/jobs`, và endpoint mới `GET /api/tts/usage`. `PLAN.md`: thêm mục P13b.
+4. Đã sửa test dùng chung `system/DoctorCommandIT`: thay `contains("schema v1")` bằng so với version Flyway hiện tại (gõ cứng v1 sẽ vỡ với mọi migration mới).

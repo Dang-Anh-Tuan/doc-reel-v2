@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui";
 import type { JobAttempt, JobStep } from "@/domain/job";
+import { ErrorText } from "./ErrorText";
 import styles from "./JobTimeline.module.css";
 import { OUTCOME_META, formatDuration, formatTime, sortAttempts, stepLabel } from "./model";
 
@@ -9,7 +10,7 @@ interface JobTimelineProps {
   runningStep?: JobStep | null;
 }
 
-/** Dòng thời gian các lần chạy bước, cũ → mới; lỗi hiện nguyên văn. */
+/** Dòng thời gian các lần chạy bước, cũ → mới; lỗi dài mặc định thu gọn 1 dòng (nút "Xem chi tiết"). */
 export function JobTimeline({ attempts, runningStep }: JobTimelineProps) {
   const sorted = sortAttempts(attempts);
   if (sorted.length === 0 && !runningStep) {
@@ -36,11 +37,7 @@ export function JobTimeline({ attempts, runningStep }: JobTimelineProps) {
               <time dateTime={a.startedAt}>{formatTime(a.startedAt)}</time>
               <span>· {formatDuration(a.durationMs)}</span>
             </div>
-            {a.error && (
-              <pre className={styles.error} role="note">
-                {a.error}
-              </pre>
-            )}
+            {a.error && <ErrorText text={a.error} />}
           </li>
         );
       })}

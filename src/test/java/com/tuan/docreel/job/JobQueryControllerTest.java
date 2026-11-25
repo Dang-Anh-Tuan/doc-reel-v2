@@ -49,7 +49,8 @@ class JobQueryControllerTest {
     @BeforeEach
     void setUp() {
         var slides = new JobSlides(TestAppProperties.withDirsUnder(root), JSON);
-        var service = new JobApiService(mock(JobService.class), repository, attempts, slides, JSON);
+        var service = new JobApiService(
+                mock(JobService.class), repository, attempts, slides, JSON, new TtsCostEstimator(1.0, 0.0002));
         mvc = MockMvcBuilders.standaloneSetup(new JobController(service))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
@@ -159,6 +160,53 @@ class JobQueryControllerTest {
                 .andExpect(jsonPath("$.slides[1].name").value("s09-quiz-reveal"))
                 .andExpect(jsonPath("$.attempts[0].durationMs").value(1500))
                 .andExpect(jsonPath("$.attempts[0].finishedAt").exists());
+    }
+
+    @Test
+    void detailAndListHaveEstimatedCost() throws Exception {
+        VideoJob job = saved(new VideoJob(
+                "R-09",
+                1,
+                "h" + UUID.randomUUID(),
+                null,
+                "ELEVENLABS",
+                "{}",
+                "api",
+                null,
+                JSON.writeValueAsString(JobFixtures.sampleScript())));
+        job.recordVoiceUsage(1200, 45_000);
+        when(attempts.findByJobIdOrderByStartedAt(job.getId()))
+                .thenReturn(List.of(
+                        new JobAttempt(job.getId(), JobStep.RENDER, 1, "SUCCESS", 1500, null),
+                        new JobAttempt(job.getId(), JobStep.VOICE, 1, "RETRY", null, "timeout"),
+                        new JobAttempt(job.getId(), JobStep.VOICE, 2, "SUCCESS", 8500, null)));
+        when(repository.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(List.of(job)));
+
+        mvc.perform(get("/api/jobs/" + job.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cost.ttsProvider").value("ELEVENLABS"))
+                .andExpect(jsonPath("$.cost.ttsChars").value(1200))
+                .andExpect(jsonPath("$.cost.estimatedCredits").value(1200.0))
+                .andExpect(jsonPath("$.cost.estimatedUsd").value(0.24))
+                .andExpect(jsonPath("$.cost.audioMs").value(45_000))
+                .andExpect(jsonPath("$.cost.processingMs").value(10_000))
+                .andExpect(jsonPath("$.cost.wallMs").isNumber());
+        mvc.perform(get("/api/jobs"))
+                .andExpect(jsonPath("$[0].ttsChars").value(1200))
+                .andExpect(jsonPath("$[0].estimatedUsd").value(0.24));
+    }
+
+    @Test
+    void edgeJobCostsNothing() throws Exception {
+        VideoJob job = sampleJob(); // provider EDGE
+        job.recordVoiceUsage(900, 30_000);
+        when(attempts.findByJobIdOrderByStartedAt(job.getId())).thenReturn(List.of());
+
+        mvc.perform(get("/api/jobs/" + job.getId()))
+                .andExpect(jsonPath("$.cost.ttsChars").value(900))
+                .andExpect(jsonPath("$.cost.estimatedCredits").value(0.0))
+                .andExpect(jsonPath("$.cost.estimatedUsd").value(0.0))
+                .andExpect(jsonPath("$.cost.processingMs").value(0));
     }
 
     @Test

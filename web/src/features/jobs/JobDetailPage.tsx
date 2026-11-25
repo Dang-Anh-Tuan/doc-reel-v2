@@ -4,6 +4,8 @@ import { Button, Message, Panel } from "@/components/ui";
 import { type JobDetail, isRunning } from "@/domain/job";
 import { useQuery } from "@/lib/api/useQuery";
 import { fetchJob } from "./api";
+import { CostPanel } from "./CostPanel";
+import { ErrorText } from "./ErrorText";
 import { JobStateBadge } from "./JobStateBadge";
 import { JobTimeline } from "./JobTimeline";
 import styles from "./JobsPage.module.css";
@@ -85,7 +87,7 @@ function JobBody({ job }: { job: JobDetail }) {
         </dl>
         {job.state === "FAILED" && job.errorMessage && (
           <Message title="Lỗi" error>
-            <p className={styles.preLine}>{job.errorMessage}</p>
+            <ErrorText text={job.errorMessage} />
           </Message>
         )}
       </Panel>
@@ -93,6 +95,8 @@ function JobBody({ job }: { job: JobDetail }) {
       <Panel title="Dòng thời gian">
         <JobTimeline attempts={job.attempts} runningStep={isRunning(job.state) ? job.currentStep : null} />
       </Panel>
+
+      <CostPanel cost={job.cost} done={job.state === "UPLOADED"} />
 
       <Panel title={`Slide đã render (${job.slides.length})`} className={styles.full}>
         {job.slides.length === 0 ? (

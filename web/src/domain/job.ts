@@ -34,6 +34,27 @@ export interface JobSummary {
   youtubeUrl: string | null;
   createdAt: string;
   updatedAt: string;
+  /** Ký tự thực gửi provider TTS (không tính câu lấy từ cache). */
+  ttsChars: number;
+  /** Chi phí TTS ước tính (USD); edge-tts = 0. */
+  estimatedUsd: number;
+}
+
+/** `JobDetail.Cost` — chi phí ƯỚC TÍNH của video (P13b). */
+export interface JobCost {
+  ttsProvider: string | null;
+  /** Ký tự thực gửi provider (sau lexicon, không tính câu cache), cộng dồn các lần voice. */
+  ttsChars: number;
+  /** ttsChars × credits-per-char; edge-tts = 0. */
+  estimatedCredits: number;
+  /** estimatedCredits × usd-per-credit. */
+  estimatedUsd: number;
+  /** Tổng độ dài audio; null = chưa voice. */
+  audioMs: number | null;
+  /** Tổng duration_ms mọi attempt (kể cả lần lỗi). */
+  processingMs: number;
+  /** createdAt → lần cập nhật cuối (= lúc UPLOADED khi đã xong). */
+  wallMs: number;
 }
 
 /** `JobDetail.Attempt`. */
@@ -78,6 +99,8 @@ export interface JobDetail {
   updatedAt: string;
   attempts: JobAttempt[];
   slides: JobSlide[];
+  /** Thiếu ở server cũ (trước P13b). */
+  cost?: JobCost | null;
 }
 
 /** Trang danh sách: body là mảng, tổng/trang/cỡ đọc từ header `X-Total-Count`, `X-Page`, `X-Page-Size`. */

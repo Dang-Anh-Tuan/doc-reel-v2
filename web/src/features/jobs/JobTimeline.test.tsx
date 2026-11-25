@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { JobAttempt } from "@/domain/job";
 import { JobTimeline } from "./JobTimeline";
-import { formatDuration, sortAttempts } from "./model";
+import { errorHeadline, formatDuration, sortAttempts } from "./model";
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean | undefined;
@@ -75,6 +75,48 @@ describe("JobTimeline", () => {
     const same = [attempt({ attemptNo: 2 }), attempt({ attemptNo: 1 })];
     expect(sortAttempts(same).map((a) => a.attemptNo)).toEqual([1, 2]);
     expect(same.map((a) => a.attemptNo)).toEqual([2, 1]);
+  });
+
+  it("lỗi dài nhiều dòng: mặc định thu gọn 1 dòng, bấm → mở, bấm lại → thu", () => {
+    const traceback = [
+      "Traceback (most recent call last):",
+      ...Array.from({ length: 40 }, (_, i) => `  File "edge_tts/communicate.py", line ${i}, in stream`),
+      "edge_tts.exceptions.NoAudioReceived: No audio was received.",
+    ].join("\n");
+    const el = render(<JobTimeline attempts={[attempt({ step: "VOICE", outcome: "FAILED", error: traceback })]} />);
+    const button = el.querySelector<HTMLButtonElement>("button");
+    expect(button?.textContent).toBe("Xem chi tiết");
+    expect(button?.getAttribute("aria-expanded")).toBe("false");
+    // thu gọn: chỉ dòng có ý nghĩa (dòng cuối của traceback), không có toàn văn
+    const note = el.querySelector("[role=note]");
+    expect(note?.textContent).toContain("NoAudioReceived: No audio was received.");
+    expect(note?.textContent).not.toContain("line 12");
+    expect(el.querySelector("pre")).toBeNull();
+
+    act(() => button?.click());
+    expect(button?.textContent).toBe("Thu gọn");
+    expect(button?.getAttribute("aria-expanded")).toBe("true");
+    const pre = el.querySelector("pre");
+    expect(pre?.textContent).toBe(traceback);
+    expect(pre?.id).toBe(button?.getAttribute("aria-controls"));
+
+    act(() => button?.click());
+    expect(button?.textContent).toBe("Xem chi tiết");
+    expect(el.querySelector("pre")).toBeNull();
+  });
+
+  it("lỗi một dòng dài: thu gọn bằng dòng đầu, có nút mở", () => {
+    const long = `ElevenLabs từ chối: HTTP 400 ${"x".repeat(300)}`;
+    const el = render(<JobTimeline attempts={[attempt({ outcome: "FAILED", error: long })]} />);
+    expect(el.querySelector("button")?.textContent).toBe("Xem chi tiết");
+    expect(el.querySelector("[role=note]")?.textContent).toContain("ElevenLabs từ chối: HTTP 400");
+  });
+
+  it("errorHeadline: dòng đầu, hoặc dòng cuối nếu là traceback / stack", () => {
+    expect(errorHeadline("Lỗi A\nchi tiết")).toBe("Lỗi A");
+    expect(errorHeadline("\n\n  Lỗi B  \n")).toBe("Lỗi B");
+    expect(errorHeadline("Traceback (most recent call last):\n  x\nValueError: hỏng")).toBe("ValueError: hỏng");
+    expect(errorHeadline("")).toBe("");
   });
 
   it("formatDuration", () => {

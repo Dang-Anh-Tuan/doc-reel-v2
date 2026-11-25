@@ -103,11 +103,12 @@ public class TtsService {
         List<VoiceResult.UnitAudio> audios = new ArrayList<>();
         List<SubtitleBuilder.Segment> segments = new ArrayList<>();
         double offset = 0;
+        long[] sent = {0};
         for (Unit unit : units) {
             List<Path> parts = new ArrayList<>();
             List<Double> durations = new ArrayList<>();
             for (int i = 0; i < unit.spoken().size(); i++) {
-                Path part = sentenceAudio(unit, i, settings, provider);
+                Path part = sentenceAudio(unit, i, settings, provider, sent);
                 parts.add(part);
                 durations.add(audio.durationSeconds(part));
             }
@@ -124,10 +125,12 @@ public class TtsService {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-        return new VoiceResult(provider.name(), audios, srt);
+        log.info("TTS xong: {} ký tự gửi {} (bỏ qua câu có sẵn trong cache)", sent[0], provider.name());
+        return new VoiceResult(provider.name(), audios, srt, sent[0], Math.round(offset * 1000));
     }
 
-    private Path sentenceAudio(Unit unit, int index, VoiceSettings settings, TtsProvider provider) {
+    /** @param sent ô đếm ký tự thực gửi provider; cache hit không cộng */
+    private Path sentenceAudio(Unit unit, int index, VoiceSettings settings, TtsProvider provider, long[] sent) {
         String sentence = unit.spoken().get(index);
         String key = TtsCache.key(provider.name(), provider.voiceKey(settings), sentence);
         var cached = cache.find(key);
@@ -138,6 +141,7 @@ public class TtsService {
         String next = index + 1 < unit.spoken().size() ? unit.spoken().get(index + 1) : null;
         byte[] bytes = provider.synthesize(sentence, previous, next, settings);
         usage.add(provider.name(), sentence.length());
+        sent[0] += sentence.length();
         return cache.store(key, bytes);
     }
 

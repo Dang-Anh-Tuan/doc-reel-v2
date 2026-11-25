@@ -154,6 +154,9 @@ public class PipelineWorker {
             if (result.ttsProvider() != null) {
                 job.pinTtsProvider(result.ttsProvider());
             }
+            if (result.ttsChars() > 0 || result.audioMs() > 0) {
+                job.recordVoiceUsage(result.ttsChars(), result.audioMs());
+            }
             job.resume();
             if (jobStep == JobStep.UPLOAD) {
                 job.markUploaded(readYoutubeId(workDir));

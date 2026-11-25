@@ -1,0 +1,61 @@
+.box {
+  min-width: 0;
+  margin: 2px 0 0;
+  padding: 6px 10px;
+  border: 1px solid color-mix(in srgb, var(--bad) 35%, var(--border));
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--bad) 8%, var(--surface-2));
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* Một dòng, cắt bằng ellipsis — lỗi dài không chiếm cả màn hình */
+.headline {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toggle {
+  flex: 0 0 auto;
+  padding: 2px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-3);
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  cursor: pointer;
+}
+.toggle:hover {
+  color: var(--text);
+}
+.toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.full {
+  max-height: 420px;
+  margin: 0;
+  overflow: auto;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.box[data-open="true"] .full {
+  margin-top: 6px;
+}

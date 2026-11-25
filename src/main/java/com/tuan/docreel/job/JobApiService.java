@@ -29,6 +29,7 @@ public class JobApiService {
     private final JobAttemptRepository attempts;
     private final JobSlides slides;
     private final JsonMapper mapper;
+    private final TtsCostEstimator costs;
     private final ScriptParser parser = new ScriptParser();
 
     public JobApiService(
@@ -36,12 +37,14 @@ public class JobApiService {
             JobRepository repository,
             JobAttemptRepository attempts,
             JobSlides slides,
-            JsonMapper mapper) {
+            JsonMapper mapper,
+            TtsCostEstimator costs) {
         this.jobs = jobs;
         this.repository = repository;
         this.attempts = attempts;
         this.slides = slides;
         this.mapper = mapper;
+        this.costs = costs;
     }
 
     /** Validate rồi tạo job. Không {@code @Transactional}: {@link JobService#submit} tự quản transaction. */
@@ -82,7 +85,8 @@ public class JobApiService {
                 job,
                 script == null ? null : script.title(),
                 attempts.findByJobIdOrderByStartedAt(id),
-                slides.rendered(id, script));
+                slides.rendered(id, script),
+                costs);
     }
 
     /** PNG thứ {@code n} của job; job không có / {@code n} sai / file không thuộc job → rỗng (controller trả 404). */
@@ -103,7 +107,7 @@ public class JobApiService {
     }
 
     private JobSummary summary(VideoJob job) {
-        return JobSummary.of(job, title(job.getScript()));
+        return JobSummary.of(job, title(job.getScript()), costs);
     }
 
     /** Chỉ đọc trường {@code title} (rẻ hơn parse cả kịch bản cho mỗi dòng danh sách). */
