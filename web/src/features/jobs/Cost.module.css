@@ -1,0 +1,69 @@
+.muted {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 8px 16px;
+  margin: 0 0 10px;
+  font-size: 13px;
+}
+
+.facts dt {
+  color: var(--text-muted);
+}
+
+.facts dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.money {
+  color: var(--accent-strong);
+  font-weight: 700;
+}
+
+.note {
+  margin: 0;
+  color: var(--text-faint);
+  font-size: 11px;
+}
+
+.usage {
+  display: grid;
+  gap: 8px;
+}
+
+.usageLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin: 0;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.bar {
+  --tone: var(--ok);
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-3);
+}
+.bar[data-tone="warn"] {
+  --tone: var(--warn);
+}
+.bar[data-tone="bad"] {
+  --tone: var(--bad);
+}
+
+.bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--tone);
+}

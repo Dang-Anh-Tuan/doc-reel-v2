@@ -1,4 +1,5 @@
 import { JOBS_PATH, type JobDetail, type JobPage, type JobState, type JobSummary } from "@/domain/job";
+import { TTS_USAGE_PATH, type TtsUsage } from "@/domain/tts";
 import { api, apiFetchWithHeaders } from "@/lib/api/client";
 
 export const PAGE_SIZE = 20;
@@ -38,4 +39,9 @@ export function fetchJob(id: string, signal?: AbortSignal): Promise<JobDetail> {
 /** `POST /api/jobs/{id}/retry` → 202 + JobSummary; 409 nếu job không ở FAILED. */
 export function retryJob(id: string): Promise<JobSummary> {
   return api.post<JobSummary>(`${JOBS_PATH}/${encodeURIComponent(id)}/retry`);
+}
+
+/** `GET /api/tts/usage` — quota ElevenLabs tháng này (server cache 60 s; lỗi → `available: false`). */
+export function fetchTtsUsage(signal?: AbortSignal): Promise<TtsUsage> {
+  return api.get<TtsUsage>(TTS_USAGE_PATH, { signal });
 }

@@ -10,6 +10,8 @@ import java.util.UUID;
  * @param title tiêu đề video lấy từ kịch bản ({@code null} nếu không đọc được)
  * @param currentStep bước đang / sẽ chạy (FAILED: bước đã hỏng); {@code null} khi đã UPLOADED
  * @param youtubeUrl {@code https://youtu.be/{youtubeId}} khi đã upload
+ * @param ttsChars ký tự thực gửi provider TTS (P13b)
+ * @param estimatedUsd chi phí TTS ước tính (USD), edge-tts = 0
  */
 public record JobSummary(
         UUID id,
@@ -25,11 +27,13 @@ public record JobSummary(
         String youtubeId,
         String youtubeUrl,
         Instant createdAt,
-        Instant updatedAt) {
+        Instant updatedAt,
+        long ttsChars,
+        double estimatedUsd) {
 
     static final String YOUTUBE_SHORT_URL = "https://youtu.be/";
 
-    static JobSummary of(VideoJob j, String title) {
+    static JobSummary of(VideoJob j, String title, TtsCostEstimator estimator) {
         return new JobSummary(
                 j.getId(),
                 j.getTopicId(),
@@ -44,7 +48,9 @@ public record JobSummary(
                 j.getYoutubeId(),
                 youtubeUrl(j.getYoutubeId()),
                 j.getCreatedAt(),
-                j.getUpdatedAt());
+                j.getUpdatedAt(),
+                j.getTtsChars(),
+                estimator.usd(j.getTtsProvider(), j.getTtsChars()));
     }
 
     static String youtubeUrl(String youtubeId) {

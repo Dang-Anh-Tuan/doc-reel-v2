@@ -58,3 +58,86 @@ export function formatTime(iso: string | null | undefined): string {
   if (Number.isNaN(d.getTime())) return iso;
   return d.toLocaleString("vi-VN", { hour12: false });
 }
+
+// ------------------------------------------------------------------ Chi phí (P13b)
+
+/** 1200 → "1.200" (vi-VN). */
+export function formatNumber(n: number | null | undefined, maxFractionDigits = 0): string {
+  if (n == null || !Number.isFinite(n)) return "—";
+  return n.toLocaleString("vi-VN", { maximumFractionDigits: maxFractionDigits });
+}
+
+/** 0.24 → "0,24 USD"; số rất nhỏ giữ 4 chữ số (0.0048 → "0,0048 USD"); 0 → "0 USD". */
+export function formatUsd(n: number | null | undefined): string {
+  if (n == null || !Number.isFinite(n)) return "—";
+  if (n === 0) return "0 USD";
+  const digits = Math.abs(n) < 0.01 ? 4 : 2;
+  return `${n.toLocaleString("vi-VN", { minimumFractionDigits: 2, maximumFractionDigits: digits })} USD`;
+}
+
+/** Số ký tự mặc định của một video khi chưa có job UPLOADED nào để lấy trung bình. */
+export const DEFAULT_CHARS_PER_VIDEO = 1200;
+/** Lấy trung bình trên tối đa ngần này job UPLOADED gần nhất. */
+const AVERAGE_WINDOW = 10;
+
+/**
+ * Trung bình ttsChars của các job ElevenLabs UPLOADED gần đây (có ký tự > 0; job edge-tts không tính); không có →
+ * {@link DEFAULT_CHARS_PER_VIDEO}.
+ */
+export function averageCharsPerVideo(
+  jobs: ReadonlyArray<{ state: string; ttsChars?: number; ttsProvider?: string | null }>,
+): number {
+  const recent = jobs
+    .filter((j) => j.state === "UPLOADED" && (j.ttsChars ?? 0) > 0 && j.ttsProvider?.toUpperCase() !== "EDGE")
+    .slice(0, AVERAGE_WINDOW)
+    .map((j) => j.ttsChars ?? 0);
+  if (recent.length === 0) return DEFAULT_CHARS_PER_VIDEO;
+  return Math.round(recent.reduce((a, b) => a + b, 0) / recent.length);
+}
+
+/**
+ * Còn làm được khoảng bao nhiêu video: credit còn lại / (ký tự TB × credit mỗi ký tự).
+ *
+ * @param creditsPerChar đơn giá cấu hình ở server; thiếu / không hợp lệ → 1
+ */
+export function remainingVideos(remaining: number, avgChars: number, creditsPerChar = 1): number {
+  const rate = Number.isFinite(creditsPerChar) && creditsPerChar > 0 ? creditsPerChar : 1;
+  const perVideo = avgChars * rate;
+  if (!Number.isFinite(remaining) || remaining <= 0 || perVideo <= 0) return 0;
+  return Math.floor(remaining / perVideo);
+}
+
+// ------------------------------------------------------------------ Lỗi gọn (P13b)
+
+/** Lỗi ngắn hơn thế này và chỉ 1 dòng → hiện nguyên, không cần nút mở rộng. */
+export const SHORT_ERROR_CHARS = 160;
+
+/**
+ * Dòng có ý nghĩa nhất của một lỗi nhiều dòng: thường là dòng đầu; traceback Python / stack Java (dòng đầu là
+ * "Traceback…" hoặc "at …") → dòng cuối (nơi có tên exception + thông điệp).
+ */
+export function errorHeadline(text: string): string {
+  const lines = text
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0);
+  const first = lines[0] ?? "";
+  if (lines.length > 1 && /^(Traceback\b|at\s|File\s")/.test(first)) return lines.at(-1) ?? first;
+  return first;
+}
+
+export function isLongError(text: string): boolean {
+  return text.length > SHORT_ERROR_CHARS || /\r?\n/.test(text.trim());
+}
+
+/** Ghi chú theo provider: edge-tts miễn phí; provider trả phí → nói rõ cách ước tính. */
+export function costNote(provider: string | null): string {
+  if (provider?.toUpperCase() === "EDGE") {
+    return "edge-tts miễn phí — chi phí 0. Số ký tự chỉ để tham khảo.";
+  }
+  const name = provider ?? "provider TTS";
+  return (
+    `Số liệu ước tính: ký tự thực gửi ${name} (không tính câu lấy từ cache) × đơn giá cấu hình. ` +
+    `Credit thật do ${name} tính có thể khác.`
+  );
+}

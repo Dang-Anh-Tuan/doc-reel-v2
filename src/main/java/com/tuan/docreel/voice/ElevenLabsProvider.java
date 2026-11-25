@@ -10,6 +10,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.springframework.stereotype.Component;
@@ -22,6 +23,8 @@ public class ElevenLabsProvider implements TtsProvider {
 
     private static final JsonMapper MAPPER = JsonMapper.builder().build();
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(60);
+    /** Đọc quota là lời gọi nhỏ, có thể chạy trên thread HTTP ({@code /api/tts/usage}) → không chờ lâu như TTS. */
+    static final Duration SUBSCRIPTION_TIMEOUT = Duration.ofSeconds(5);
 
     private final AppProperties.ElevenLabs config;
     private final HttpClient http =
@@ -46,14 +49,32 @@ public class ElevenLabsProvider implements TtsProvider {
         if (!isConfigured()) {
             return 0;
         }
+        Subscription sub = subscription();
+        return sub.limit() - sub.used();
+    }
+
+    /**
+     * Quota tháng hiện tại từ {@code GET /v1/user/subscription}.
+     *
+     * @param used {@code character_count} (credit đã dùng trong chu kỳ)
+     * @param limit {@code character_limit}
+     * @param resetAt {@code next_character_count_reset_unix}; null nếu API không trả
+     */
+    public record Subscription(long used, long limit, Instant resetAt) {}
+
+    /** Gọi ElevenLabs; lỗi HTTP/mạng ném {@link TtsException} (message không chứa key). */
+    public Subscription subscription() {
         HttpResponse<byte[]> response =
-                send(HttpRequest.newBuilder(url("/v1/user/subscription")).GET());
+                send(HttpRequest.newBuilder(url("/v1/user/subscription")).GET(), SUBSCRIPTION_TIMEOUT);
         if (response.statusCode() != 200) {
             throw failure(response);
         }
         JsonNode json = MAPPER.readTree(response.body());
-        return json.path("character_limit").asLong()
-                - json.path("character_count").asLong();
+        JsonNode reset = json.path("next_character_count_reset_unix");
+        return new Subscription(
+                json.path("character_count").asLong(),
+                json.path("character_limit").asLong(),
+                reset.isNumber() && reset.asLong() > 0 ? Instant.ofEpochSecond(reset.asLong()) : null);
     }
 
     @Override
@@ -79,7 +100,7 @@ public class ElevenLabsProvider implements TtsProvider {
                 .header("Content-Type", "application/json")
                 .header("Accept", "audio/mpeg")
                 .POST(HttpRequest.BodyPublishers.ofString(MAPPER.writeValueAsString(body), StandardCharsets.UTF_8));
-        HttpResponse<byte[]> response = send(request);
+        HttpResponse<byte[]> response = send(request, REQUEST_TIMEOUT);
         if (response.statusCode() != 200) {
             throw failure(response);
         }
@@ -94,10 +115,9 @@ public class ElevenLabsProvider implements TtsProvider {
         return URI.create(base.endsWith("/") ? base.substring(0, base.length() - 1) + path : base + path);
     }
 
-    private HttpResponse<byte[]> send(HttpRequest.Builder builder) {
-        HttpRequest request = builder.header("xi-api-key", config.apiKey())
-                .timeout(REQUEST_TIMEOUT)
-                .build();
+    private HttpResponse<byte[]> send(HttpRequest.Builder builder, Duration timeout) {
+        HttpRequest request =
+                builder.header("xi-api-key", config.apiKey()).timeout(timeout).build();
         try {
             return http.send(request, HttpResponse.BodyHandlers.ofByteArray());
         } catch (IOException e) {

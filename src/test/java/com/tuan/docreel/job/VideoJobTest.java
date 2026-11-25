@@ -31,6 +31,19 @@ class VideoJobTest {
     }
 
     @Test
+    void voiceUsageAccumulatesCharsAndKeepsLatestAudioLength() {
+        VideoJob job = JobFixtures.newJob();
+        assertThat(job.getTtsChars()).isZero();
+        assertThat(job.getAudioMs()).isNull();
+
+        job.recordVoiceUsage(120, 45_000);
+        job.recordVoiceUsage(30, 46_000); // voice lại: cộng ký tự, độ dài audio là lần mới nhất
+
+        assertThat(job.getTtsChars()).isEqualTo(150);
+        assertThat(job.getAudioMs()).isEqualTo(46_000);
+    }
+
+    @Test
     void retryOnlyFromFailed() {
         VideoJob job = JobFixtures.newJob();
         assertThatThrownBy(job::retry).isInstanceOf(IllegalStateTransitionException.class);

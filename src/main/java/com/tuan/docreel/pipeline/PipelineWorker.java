@@ -141,11 +141,17 @@ public class PipelineWorker {
             Files.createDirectories(workDir);
             VideoScript script = mapper.readValue(job.getScript(), VideoScript.class);
             StepResult result;
+            UsageMeter usage = new UsageMeter();
             try {
-                result = step.execute(new StepContext(job.getId(), current, script, workDir, attemptNo));
+                result = step.execute(new StepContext(job.getId(), current, script, workDir, attemptNo, usage));
             } finally {
                 // Step tự put/remove "jobId" trong MDC → khôi phục để log sau bước (kể cả log lỗi) vẫn có jobId
                 MDC.put("jobId", job.getId().toString());
+                // Ký tự TTS đã gửi = đã bị tính tiền, kể cả khi bước lỗi giữa chừng (retry sau lấy từ cache, không
+                // gửi lại) → ghi vào job trong cùng transaction với attempt, thành công hay lỗi đều vậy.
+                if (usage.ttsChars() > 0) {
+                    job.recordVoiceUsage(usage.ttsChars(), 0);
+                }
             }
             if (result.nextState() != jobStep.resultingState()) {
                 throw new IllegalStateException(
@@ -153,6 +159,9 @@ public class PipelineWorker {
             }
             if (result.ttsProvider() != null) {
                 job.pinTtsProvider(result.ttsProvider());
+            }
+            if (result.audioMs() > 0) {
+                job.recordVoiceUsage(0, result.audioMs());
             }
             job.resume();
             if (jobStep == JobStep.UPLOAD) {

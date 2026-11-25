@@ -108,10 +108,13 @@ class VoiceStepIT {
                 (provider, chars) -> {});
 
         Path work = Files.createDirectories(root.resolve("work/job"));
+        var usage = new com.tuan.docreel.pipeline.UsageMeter();
         var result = new VoiceStep(tts, repository)
-                .execute(new StepContext(submitted.jobId(), JobState.RENDERED, script, work, 1));
+                .execute(new StepContext(submitted.jobId(), JobState.RENDERED, script, work, 1, usage));
 
         assertThat(seenVoices).containsExactly("voice-OLD");
         assertThat(result.ttsProvider()).isEqualTo("ELEVENLABS"); // P5 ghi vào job.tts_provider
+        assertThat(usage.ttsChars()).isEqualTo("Một câu.".length()); // P13b: worker ghi vào job.tts_chars
+        assertThat(result.audioMs()).isPositive();
     }
 }

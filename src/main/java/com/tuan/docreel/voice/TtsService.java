@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.LongConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -53,6 +54,16 @@ public class TtsService {
      * @param pinned provider job đã dùng ở lần trước (retry giữ nguyên); null = chọn mới
      */
     public VoiceResult voice(VideoScript script, Path workDir, VoiceSettings settings, TtsProviderName pinned) {
+        return voice(script, workDir, settings, pinned, chars -> {});
+    }
+
+    /**
+     * @param onSent gọi ngay sau mỗi câu gửi provider thành công (số ký tự, cache hit không gọi) — để người gọi giữ
+     *     được số ký tự đã tiêu cả khi lần đọc này lỗi giữa chừng
+     */
+    public VoiceResult voice(
+            VideoScript script, Path workDir, VoiceSettings settings, TtsProviderName pinned, LongConsumer onSent) {
+        SentCounter sent = new SentCounter(onSent);
         List<Unit> units = units(script);
         long needed = units.stream()
                 .flatMap(u -> u.spoken().stream())
@@ -62,14 +73,14 @@ public class TtsService {
         TtsProvider fallback = provider(settings.fallback());
         log.info("TTS: {} ký tự, provider {}", needed, provider.name());
         try {
-            return render(units, workDir, settings, provider);
+            return render(units, workDir, settings, provider, sent);
         } catch (TtsQuotaExceededException e) {
             if (provider == fallback) {
                 throw e;
             }
             log.warn("{} hết quota giữa chừng → bỏ audio, đọc lại toàn bộ bằng {}", provider.name(), fallback.name());
             deleteOutputs(units, workDir);
-            return render(units, workDir, settings, fallback);
+            return render(units, workDir, settings, fallback, sent); // ký tự cộng dồn cả 2 lần đọc
         }
     }
 
@@ -94,7 +105,23 @@ public class TtsService {
         return p;
     }
 
-    private VoiceResult render(List<Unit> units, Path workDir, VoiceSettings settings, TtsProvider provider) {
+    /** Đếm ký tự thực gửi provider trong một lần {@code voice} (cộng dồn qua cả lần đọc lại bằng dự phòng). */
+    private static final class SentCounter {
+        private final LongConsumer listener;
+        private long total;
+
+        SentCounter(LongConsumer listener) {
+            this.listener = listener;
+        }
+
+        void add(long chars) {
+            total += chars;
+            listener.accept(chars);
+        }
+    }
+
+    private VoiceResult render(
+            List<Unit> units, Path workDir, VoiceSettings settings, TtsProvider provider, SentCounter sent) {
         try {
             Files.createDirectories(workDir);
         } catch (IOException e) {
@@ -107,7 +134,7 @@ public class TtsService {
             List<Path> parts = new ArrayList<>();
             List<Double> durations = new ArrayList<>();
             for (int i = 0; i < unit.spoken().size(); i++) {
-                Path part = sentenceAudio(unit, i, settings, provider);
+                Path part = sentenceAudio(unit, i, settings, provider, sent);
                 parts.add(part);
                 durations.add(audio.durationSeconds(part));
             }
@@ -124,10 +151,12 @@ public class TtsService {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-        return new VoiceResult(provider.name(), audios, srt);
+        log.info("TTS xong: {} ký tự gửi provider (bỏ qua câu có sẵn trong cache)", sent.total);
+        return new VoiceResult(provider.name(), audios, srt, sent.total, Math.round(offset * 1000));
     }
 
-    private Path sentenceAudio(Unit unit, int index, VoiceSettings settings, TtsProvider provider) {
+    /** @param sent bộ đếm ký tự thực gửi provider; cache hit không cộng */
+    private Path sentenceAudio(Unit unit, int index, VoiceSettings settings, TtsProvider provider, SentCounter sent) {
         String sentence = unit.spoken().get(index);
         String key = TtsCache.key(provider.name(), provider.voiceKey(settings), sentence);
         var cached = cache.find(key);
@@ -138,6 +167,7 @@ public class TtsService {
         String next = index + 1 < unit.spoken().size() ? unit.spoken().get(index + 1) : null;
         byte[] bytes = provider.synthesize(sentence, previous, next, settings);
         usage.add(provider.name(), sentence.length());
+        sent.add(sentence.length());
         return cache.store(key, bytes);
     }
 

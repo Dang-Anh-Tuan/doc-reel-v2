@@ -93,12 +93,6 @@
   overflow-wrap: anywhere;
 }
 
-.preLine {
-  margin: 4px 0 0;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
 .slides {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));

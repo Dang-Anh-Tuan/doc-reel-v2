@@ -37,6 +37,8 @@ function job(id: string, state: JobState): JobSummary {
     youtubeUrl: null,
     createdAt: "2026-11-24T15:57:47Z",
     updatedAt: "2026-11-24T15:57:58Z",
+    ttsChars: 1200,
+    estimatedUsd: 0.24,
   };
 }
 
@@ -68,6 +70,12 @@ function rows(el: HTMLElement): [HTMLElement, ...HTMLElement[]] {
 }
 
 describe("JobsTable", () => {
+  it("cột ≈ USD", () => {
+    const el = render([job("a", "UPLOADED")]);
+    expect(el.querySelector("thead")?.textContent).toContain("≈ USD");
+    expect(rows(el)[0].textContent).toContain("0,24");
+  });
+
   it("nút Retry chỉ có trên dòng FAILED", () => {
     const el = render([job("a", "FAILED"), job("b", "UPLOADED"), job("c", "RENDERED")]);
     const buttons = rows(el).map((r) => r.querySelector("button")?.textContent ?? null);

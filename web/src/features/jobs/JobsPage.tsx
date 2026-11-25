@@ -3,10 +3,11 @@ import { PageHeader } from "@/app/PageHeader";
 import { Button, Message, Panel, Select } from "@/components/ui";
 import { JOB_STATES, type JobState } from "@/domain/job";
 import { useQuery } from "@/lib/api/useQuery";
-import { PAGE_SIZE, fetchJobs } from "./api";
+import { PAGE_SIZE, fetchJobs, fetchTtsUsage } from "./api";
 import { JobsTable } from "./JobsTable";
 import styles from "./JobsPage.module.css";
 import { STATE_META } from "./model";
+import { TtsUsageCard } from "./TtsUsageCard";
 
 type Filter = JobState | "ALL";
 
@@ -26,6 +27,9 @@ export function JobsPage() {
     (signal) => fetchJobs({ state, page, size: PAGE_SIZE }, signal),
     { refreshSeconds: 10 },
   );
+
+  // Server cache 60 s → web hỏi lại mỗi 60 s là đủ
+  const usage = useQuery("tts-usage", fetchTtsUsage, { refreshSeconds: 60 });
 
   const pages = data ? Math.max(1, Math.ceil(data.total / data.size)) : 1;
 
@@ -57,6 +61,13 @@ export function JobsPage() {
             {error.detail && <p>{error.detail}</p>}
           </Message>
         )}
+        <TtsUsageCard
+          usage={
+            usage.data ??
+            (usage.error ? { available: false, provider: "ELEVENLABS", reason: usage.error.title } : null)
+          }
+          recentJobs={data?.items ?? []}
+        />
         <Panel
           title={data ? `${data.total} job` : "Danh sách job"}
           actions={

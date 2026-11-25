@@ -90,3 +90,9 @@
   font-weight: 600;
   white-space: nowrap;
 }
+
+.num {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
