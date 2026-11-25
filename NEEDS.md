@@ -135,3 +135,21 @@
 2. Migration: `V901__job_tts_cost.sql` là số tạm → đánh số lại (vd `V2__job_tts_cost.sql`) khi merge. Thêm `video_job.tts_chars BIGINT NOT NULL DEFAULT 0` (+ CHECK ≥ 0) và `video_job.audio_ms BIGINT`.
 3. `SPEC.md` mục 9 / 11 (orchestrator): ghi thêm 2 cột trên, khối `cost` trong `GET /api/jobs/{id}`, `ttsChars` + `estimatedUsd` trong `GET /api/jobs`, và endpoint mới `GET /api/tts/usage`. `PLAN.md`: thêm mục P13b.
 4. Đã sửa test dùng chung `system/DoctorCommandIT`: thay `contains("schema v1")` bằng so với version Flyway hiện tại (gõ cứng v1 sẽ vỡ với mọi migration mới).
+
+# NEEDS (P8b)
+
+1. `src/main/resources/application.yml` (tùy chọn — mọi khóa đã có mặc định trong `AppProperties.ElevenLabs.DEFAULT_*`): thêm vào `docreel.tts.elevenlabs` để dễ chỉnh bằng tai:
+   ```yaml
+         # P8b: tinh chỉnh giọng. Giá trị rỗng = không gửi field (dùng khi đổi model không hỗ trợ field đó).
+         language-code: vi             # language_code (ISO 639-1); flash_v2_5/v3/v4 hỗ trợ, multilingual_v2 bỏ qua
+         stability: 0.4                # 0–1, thấp = biểu cảm hơn, cao = đều đều
+         similarity-boost: 0.8         # 0–1
+         style: 0.2                    # 0–1, > 0 tốn tài nguyên hơn
+         speaker-boost: true           # use_speaker_boost
+         text-normalization: "on"      # on | off | auto | "" (không gửi); Flash mặc định off → số đọc kém
+         send-context: true            # previous_text/next_text; false nếu model không hỗ trợ (v3/v4 chưa xác nhận)
+         apply-lexicon: false          # ElevenLabs đọc từ tiếng Anh tốt; lexicon (phiên âm kiểu edge) làm giọng ngọng
+   ```
+   Lưu ý: nên để `"on"` trong ngoặc kép; nếu quên (YAML 1.1 hiểu `on` = true) code vẫn đổi "true"→"on", "false"→"off".
+2. `SPEC.md` mục 8: (a) "Áp lexicon → tính needed" → lexicon chỉ áp cho provider có `apply-lexicon` (edge luôn áp, ElevenLabs mặc định không); (b) khóa cache `sha256(provider + voiceKey + câu)`, `voiceKey` ElevenLabs gồm model, voice, speed, language, stability, similarity, style, speakerBoost, normalization, sendContext, applyLexicon; (c) khối config thêm các khóa ở mục 1; (d) `tts_settings.elevenlabs` (mục 7.2) thêm các khóa tương ứng (camelCase), job cũ thiếu khóa → mặc định.
+3. `docs/STATUS.md`: thêm dòng P8b.

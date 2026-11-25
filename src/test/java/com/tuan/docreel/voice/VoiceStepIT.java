@@ -69,7 +69,7 @@ class VoiceStepIT {
                 new com.tuan.docreel.common.AppProperties.Tts(
                         TtsProviderName.ELEVENLABS,
                         TtsProviderName.EDGE,
-                        new com.tuan.docreel.common.AppProperties.ElevenLabs(
+                        com.tuan.docreel.common.AppProperties.ElevenLabs.withDefaults(
                                 "", URI.create("http://localhost:1"), "m", voiceId, 1.0),
                         new com.tuan.docreel.common.AppProperties.Edge("edge-tts", edgeVoice, "+0%", 0)),
                 base.selfCheck());

@@ -13,8 +13,16 @@ public interface TtsProvider {
     /** Số ký tự còn đọc được trong tháng; edge-tts không giới hạn. */
     long remainingChars();
 
-    /** Phần của khóa cache đại diện cho giọng + tốc độ. */
+    /** Phần của khóa cache: mọi tham số ảnh hưởng audio (giọng, tốc độ, model, tinh chỉnh, có áp lexicon hay không). */
     String voiceKey(VoiceSettings settings);
+
+    /**
+     * true = câu được áp {@link Lexicon} (phiên âm thuật ngữ) trước khi gửi. Mặc định true (edge-tts vi-VN đọc từ tiếng
+     * Anh rất kém); provider đọc tốt từ tiếng Anh xen trong câu Việt có thể tắt.
+     */
+    default boolean appliesLexicon(VoiceSettings settings) {
+        return true;
+    }
 
     /**
      * Đọc 1 câu → nội dung MP3.

@@ -47,7 +47,10 @@ public class TtsService {
         this.usage = usage;
     }
 
-    /** Phần đọc của một frame: câu đọc (đã áp lexicon) và câu hiện phụ đề (narration gốc). */
+    /**
+     * Phần đọc của một frame: câu đọc (chưa áp lexicon — tùy provider, xem {@link TtsProvider#appliesLexicon}) và câu
+     * hiện phụ đề (narration gốc).
+     */
     private record Unit(String name, List<String> spoken, List<String> shown) {}
 
     /**
@@ -65,8 +68,12 @@ public class TtsService {
             VideoScript script, Path workDir, VoiceSettings settings, TtsProviderName pinned, LongConsumer onSent) {
         SentCounter sent = new SentCounter(onSent);
         List<Unit> units = units(script);
+        // needed chỉ dùng để kiểm quota provider chính → đếm theo cách provider chính sẽ gửi (có/không lexicon)
+        TtsProvider primary = providers.get(settings.primary());
+        boolean lexiconForPrimary = primary == null || primary.appliesLexicon(settings);
         long needed = units.stream()
                 .flatMap(u -> u.spoken().stream())
+                .map(s -> lexiconForPrimary ? lexicon.apply(s) : s)
                 .mapToLong(String::length)
                 .sum();
         TtsProvider provider = choose(needed, settings, pinned);
@@ -130,11 +137,14 @@ public class TtsService {
         List<VoiceResult.UnitAudio> audios = new ArrayList<>();
         List<SubtitleBuilder.Segment> segments = new ArrayList<>();
         double offset = 0;
+        boolean applyLexicon = provider.appliesLexicon(settings);
         for (Unit unit : units) {
+            List<String> spoken =
+                    applyLexicon ? unit.spoken().stream().map(lexicon::apply).toList() : unit.spoken();
             List<Path> parts = new ArrayList<>();
             List<Double> durations = new ArrayList<>();
-            for (int i = 0; i < unit.spoken().size(); i++) {
-                Path part = sentenceAudio(unit, i, settings, provider, sent);
+            for (int i = 0; i < spoken.size(); i++) {
+                Path part = sentenceAudio(spoken, i, settings, provider, sent);
                 parts.add(part);
                 durations.add(audio.durationSeconds(part));
             }
@@ -155,16 +165,20 @@ public class TtsService {
         return new VoiceResult(provider.name(), audios, srt, sent.total, Math.round(offset * 1000));
     }
 
-    /** @param sent bộ đếm ký tự thực gửi provider; cache hit không cộng */
-    private Path sentenceAudio(Unit unit, int index, VoiceSettings settings, TtsProvider provider, SentCounter sent) {
-        String sentence = unit.spoken().get(index);
+    /**
+     * @param spoken các câu của frame, đúng như sẽ gửi provider (đã/không áp lexicon)
+     * @param sent bộ đếm ký tự thực gửi provider; cache hit không cộng
+     */
+    private Path sentenceAudio(
+            List<String> spoken, int index, VoiceSettings settings, TtsProvider provider, SentCounter sent) {
+        String sentence = spoken.get(index);
         String key = TtsCache.key(provider.name(), provider.voiceKey(settings), sentence);
         var cached = cache.find(key);
         if (cached.isPresent()) {
             return cached.get();
         }
-        String previous = index > 0 ? unit.spoken().get(index - 1) : null;
-        String next = index + 1 < unit.spoken().size() ? unit.spoken().get(index + 1) : null;
+        String previous = index > 0 ? spoken.get(index - 1) : null;
+        String next = index + 1 < spoken.size() ? spoken.get(index + 1) : null;
         byte[] bytes = provider.synthesize(sentence, previous, next, settings);
         usage.add(provider.name(), sentence.length());
         sent.add(sentence.length());
@@ -199,8 +213,7 @@ public class TtsService {
     }
 
     private Unit unit(String name, String spokenText, String shownText) {
-        List<String> spoken =
-                SentenceSplitter.split(spokenText).stream().map(lexicon::apply).toList();
+        List<String> spoken = SentenceSplitter.split(spokenText);
         if (spoken.isEmpty()) {
             throw new TtsException("Scene " + name + " không có lời đọc");
         }

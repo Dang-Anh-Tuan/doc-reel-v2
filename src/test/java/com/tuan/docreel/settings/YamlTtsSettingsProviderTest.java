@@ -22,4 +22,19 @@ class YamlTtsSettingsProviderTest {
         assertThat(json.get("edge").get("voice").asString()).isEqualTo("vi-VN-HoaiMyNeural");
         assertThat(s.json()).doesNotContainIgnoringCase("apikey");
     }
+
+    @Test
+    void snapshotHasElevenLabsTuning() {
+        TtsSettings s = new YamlTtsSettingsProvider(TestAppProperties.withDirsUnder(Path.of("x"))).current();
+
+        JsonNode el = JsonMapper.builder().build().readTree(s.json()).get("elevenlabs");
+        assertThat(el.get("languageCode").asString()).isEqualTo("vi");
+        assertThat(el.get("stability").asDouble()).isEqualTo(0.4);
+        assertThat(el.get("similarityBoost").asDouble()).isEqualTo(0.8);
+        assertThat(el.get("style").asDouble()).isEqualTo(0.2);
+        assertThat(el.get("speakerBoost").asBoolean()).isTrue();
+        assertThat(el.get("textNormalization").asString()).isEqualTo("on");
+        assertThat(el.get("sendContext").asBoolean()).isTrue();
+        assertThat(el.get("applyLexicon").asBoolean()).isFalse();
+    }
 }

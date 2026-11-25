@@ -79,21 +79,52 @@ public class ElevenLabsProvider implements TtsProvider {
 
     @Override
     public String voiceKey(VoiceSettings settings) {
-        return config.model() + "|" + settings.elevenVoiceId() + "|" + settings.elevenSpeed();
+        ElevenTuning t = settings.eleven();
+        return String.join(
+                "|",
+                model(settings),
+                settings.elevenVoiceId(),
+                String.valueOf(settings.elevenSpeed()),
+                "lang=" + blankToEmpty(t.languageCode()),
+                "stab=" + t.stability(),
+                "sim=" + t.similarityBoost(),
+                "style=" + t.style(),
+                "boost=" + t.speakerBoost(),
+                "norm=" + blankToEmpty(t.textNormalization()),
+                "ctx=" + t.sendContext(),
+                "lex=" + t.applyLexicon());
+    }
+
+    @Override
+    public boolean appliesLexicon(VoiceSettings settings) {
+        return settings.eleven().applyLexicon();
+    }
+
+    /** Body JSON của {@code POST /v1/text-to-speech/{voice}}: field null/rỗng bị bỏ (model không hỗ trợ → không 400). */
+    Map<String, Object> requestBody(String sentence, String previous, String next, VoiceSettings settings) {
+        ElevenTuning t = settings.eleven();
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("text", sentence);
+        body.put("model_id", model(settings));
+        putIfPresent(body, "language_code", t.languageCode());
+        Map<String, Object> voice = new LinkedHashMap<>();
+        putIfPresent(voice, "stability", t.stability());
+        putIfPresent(voice, "similarity_boost", t.similarityBoost());
+        putIfPresent(voice, "style", t.style());
+        putIfPresent(voice, "use_speaker_boost", t.speakerBoost());
+        voice.put("speed", settings.elevenSpeed());
+        body.put("voice_settings", voice);
+        putIfPresent(body, "apply_text_normalization", t.textNormalization());
+        if (t.sendContext()) {
+            putIfPresent(body, "previous_text", previous);
+            putIfPresent(body, "next_text", next);
+        }
+        return body;
     }
 
     @Override
     public byte[] synthesize(String sentence, String previous, String next, VoiceSettings settings) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("text", sentence);
-        body.put("model_id", config.model());
-        body.put("voice_settings", Map.of("speed", settings.elevenSpeed()));
-        if (previous != null) {
-            body.put("previous_text", previous);
-        }
-        if (next != null) {
-            body.put("next_text", next);
-        }
+        Map<String, Object> body = requestBody(sentence, previous, next, settings);
         String voice = URLEncoder.encode(settings.elevenVoiceId(), StandardCharsets.UTF_8);
         HttpRequest.Builder request = HttpRequest.newBuilder(
                         url("/v1/text-to-speech/" + voice + "?output_format=mp3_44100_128"))
@@ -108,6 +139,23 @@ public class ElevenLabsProvider implements TtsProvider {
             throw new TtsTransientException("ElevenLabs trả audio rỗng");
         }
         return response.body();
+    }
+
+    /** Model đã chụp trong job; job cũ không có → cấu hình hiện hành. */
+    private String model(VoiceSettings settings) {
+        String m = settings.eleven().model();
+        return m == null || m.isBlank() ? config.model() : m;
+    }
+
+    private static void putIfPresent(Map<String, Object> map, String key, Object value) {
+        if (value == null || (value instanceof String s && s.isBlank())) {
+            return;
+        }
+        map.put(key, value);
+    }
+
+    private static String blankToEmpty(String s) {
+        return s == null ? "" : s.strip();
     }
 
     private URI url(String path) {
