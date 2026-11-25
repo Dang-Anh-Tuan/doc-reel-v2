@@ -90,19 +90,22 @@ describe("JobTimeline", () => {
     // thu gọn: chỉ dòng có ý nghĩa (dòng cuối của traceback), không có toàn văn
     const note = el.querySelector("[role=note]");
     expect(note?.textContent).toContain("NoAudioReceived: No audio was received.");
-    expect(note?.textContent).not.toContain("line 12");
-    expect(el.querySelector("pre")).toBeNull();
+    const pre = el.querySelector("pre");
+    expect(pre?.hidden).toBe(true); // toàn văn có trong DOM nhưng ẩn
+    expect(el.querySelector(".headline, [title]")?.textContent).not.toContain("line 12");
+    // aria-controls luôn trỏ tới phần tử có thật
+    expect(pre?.id).toBeTruthy();
+    expect(pre?.id).toBe(button?.getAttribute("aria-controls"));
 
     act(() => button?.click());
     expect(button?.textContent).toBe("Thu gọn");
     expect(button?.getAttribute("aria-expanded")).toBe("true");
-    const pre = el.querySelector("pre");
+    expect(pre?.hidden).toBe(false);
     expect(pre?.textContent).toBe(traceback);
-    expect(pre?.id).toBe(button?.getAttribute("aria-controls"));
 
     act(() => button?.click());
     expect(button?.textContent).toBe("Xem chi tiết");
-    expect(el.querySelector("pre")).toBeNull();
+    expect(pre?.hidden).toBe(true);
   });
 
   it("lỗi một dòng dài: thu gọn bằng dòng đầu, có nút mở", () => {

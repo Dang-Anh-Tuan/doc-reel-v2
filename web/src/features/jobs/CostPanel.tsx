@@ -1,7 +1,7 @@
 import { Panel } from "@/components/ui";
 import type { JobCost } from "@/domain/job";
 import styles from "./Cost.module.css";
-import { formatDuration, formatNumber, formatUsd } from "./model";
+import { costNote, formatDuration, formatNumber, formatUsd } from "./model";
 
 interface CostPanelProps {
   /** `JobDetail.cost`; thiếu khi server chưa có P13b. */
@@ -35,10 +35,7 @@ export function CostPanel({ cost, done, className }: CostPanelProps) {
             <dt>{done ? "Nhận → xong" : "Nhận → hiện tại"}</dt>
             <dd>{formatDuration(cost.wallMs)}</dd>
           </dl>
-          <p className={styles.note}>
-            Số liệu ước tính: ký tự thực gửi ElevenLabs (sau lexicon, không tính câu lấy từ cache) × đơn giá cấu hình.
-            Credit thật do ElevenLabs tính có thể khác.
-          </p>
+          <p className={styles.note}>{costNote(cost.ttsProvider)}</p>
         </>
       )}
     </Panel>

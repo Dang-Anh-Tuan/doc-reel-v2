@@ -28,6 +28,7 @@ import java.time.Duration;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -107,6 +108,57 @@ class VoiceCostIT {
                 .parse(Files.readAllBytes(Path.of("samples", "full", "sample-all-scenes.json")))
                 .value();
         return jobs.submit(script, null).jobId();
+    }
+
+    private Long storedChars(UUID id) {
+        return jdbc.queryForObject("select tts_chars from video_job where id = ?", Long.class, id);
+    }
+
+    @Test
+    void charsSentBeforeMidwayFailureAreKeptAndRetryAddsOnlyNewOnes() throws Exception {
+        UUID id = newJob();
+        AtomicInteger calls = new AtomicInteger();
+        TtsServiceTest.StubProvider eleven =
+                new TtsServiceTest.StubProvider(TtsProviderName.ELEVENLABS, true, 10_000_000) {
+                    @Override
+                    public byte[] synthesize(String s, String p, String n, VoiceSettings settings) {
+                        if (calls.incrementAndGet() == 3) { // câu thứ 3 lỗi mạng (một lần)
+                            throw new TtsTransientException("mạng rớt");
+                        }
+                        return super.synthesize(s, p, n, settings);
+                    }
+                };
+        TtsService tts = new TtsService(
+                List.of(eleven),
+                new Lexicon(props.dirs().work().resolve("none.yaml"), false),
+                new TtsCache(props),
+                new FakeAudioTool(),
+                (provider, chars) -> {});
+        PipelineWorker worker = new PipelineWorker(
+                repository,
+                attempts,
+                List.of(fakeRender(), new VoiceStep(tts, repository)),
+                new RetryPolicy(List.of(Duration.ZERO)),
+                props,
+                mock(SystemSelfCheck.class),
+                events,
+                mapper,
+                tm);
+
+        assertThat(worker.runOnce()).isTrue(); // render giả
+        assertThat(worker.runOnce()).isTrue(); // voice lỗi ở câu 3 → RETRY
+        assertThat(eleven.received).hasSize(2);
+        long firstTwo = eleven.received.stream().mapToLong(String::length).sum();
+        assertThat(storedChars(id)).isEqualTo(firstTwo); // 2 câu đã gửi (đã tính tiền) không bị mất
+        assertThat(api.detail(id).attempts())
+                .extracting(JobDetail.Attempt::outcome)
+                .contains("RETRY");
+
+        assertThat(worker.runOnce()).isTrue(); // retry: 2 câu đầu lấy cache, chỉ gửi phần còn lại
+        assertThat(api.detail(id).state()).isEqualTo(JobState.VOICED);
+        long totalSent = eleven.received.stream().mapToLong(String::length).sum();
+        assertThat(storedChars(id)).isEqualTo(totalSent); // = tổng ký tự thực gửi, mỗi câu đúng 1 lần
+        assertThat(eleven.received).doesNotHaveDuplicates();
     }
 
     @Test

@@ -80,20 +80,31 @@ export const DEFAULT_CHARS_PER_VIDEO = 1200;
 /** Lấy trung bình trên tối đa ngần này job UPLOADED gần nhất. */
 const AVERAGE_WINDOW = 10;
 
-/** Trung bình ttsChars của các job UPLOADED gần đây (có ký tự > 0); không có → {@link DEFAULT_CHARS_PER_VIDEO}. */
-export function averageCharsPerVideo(jobs: ReadonlyArray<{ state: string; ttsChars?: number }>): number {
+/**
+ * Trung bình ttsChars của các job ElevenLabs UPLOADED gần đây (có ký tự > 0; job edge-tts không tính); không có →
+ * {@link DEFAULT_CHARS_PER_VIDEO}.
+ */
+export function averageCharsPerVideo(
+  jobs: ReadonlyArray<{ state: string; ttsChars?: number; ttsProvider?: string | null }>,
+): number {
   const recent = jobs
-    .filter((j) => j.state === "UPLOADED" && (j.ttsChars ?? 0) > 0)
+    .filter((j) => j.state === "UPLOADED" && (j.ttsChars ?? 0) > 0 && j.ttsProvider?.toUpperCase() !== "EDGE")
     .slice(0, AVERAGE_WINDOW)
     .map((j) => j.ttsChars ?? 0);
   if (recent.length === 0) return DEFAULT_CHARS_PER_VIDEO;
   return Math.round(recent.reduce((a, b) => a + b, 0) / recent.length);
 }
 
-/** Còn làm được khoảng bao nhiêu video với số credit còn lại. */
-export function remainingVideos(remaining: number, avgChars: number): number {
-  if (!Number.isFinite(remaining) || remaining <= 0 || avgChars <= 0) return 0;
-  return Math.floor(remaining / avgChars);
+/**
+ * Còn làm được khoảng bao nhiêu video: credit còn lại / (ký tự TB × credit mỗi ký tự).
+ *
+ * @param creditsPerChar đơn giá cấu hình ở server; thiếu / không hợp lệ → 1
+ */
+export function remainingVideos(remaining: number, avgChars: number, creditsPerChar = 1): number {
+  const rate = Number.isFinite(creditsPerChar) && creditsPerChar > 0 ? creditsPerChar : 1;
+  const perVideo = avgChars * rate;
+  if (!Number.isFinite(remaining) || remaining <= 0 || perVideo <= 0) return 0;
+  return Math.floor(remaining / perVideo);
 }
 
 // ------------------------------------------------------------------ Lỗi gọn (P13b)
@@ -117,4 +128,16 @@ export function errorHeadline(text: string): string {
 
 export function isLongError(text: string): boolean {
   return text.length > SHORT_ERROR_CHARS || /\r?\n/.test(text.trim());
+}
+
+/** Ghi chú theo provider: edge-tts miễn phí; provider trả phí → nói rõ cách ước tính. */
+export function costNote(provider: string | null): string {
+  if (provider?.toUpperCase() === "EDGE") {
+    return "edge-tts miễn phí — chi phí 0. Số ký tự chỉ để tham khảo.";
+  }
+  const name = provider ?? "provider TTS";
+  return (
+    `Số liệu ước tính: ký tự thực gửi ${name} (không tính câu lấy từ cache) × đơn giá cấu hình. ` +
+    `Credit thật do ${name} tính có thể khác.`
+  );
 }

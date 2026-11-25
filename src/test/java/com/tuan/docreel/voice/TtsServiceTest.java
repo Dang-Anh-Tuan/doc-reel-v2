@@ -179,6 +179,56 @@ class TtsServiceTest {
     }
 
     @Test
+    void failureMidwayStillReportsCharsAlreadySent() {
+        StubProvider eleven = new StubProvider(TtsProviderName.ELEVENLABS, true, 1_000_000) {
+            @Override
+            public byte[] synthesize(String s, String p, String n, VoiceSettings st) {
+                if (s.startsWith("Câu ba")) {
+                    throw new TtsTransientException("mạng rớt");
+                }
+                return super.synthesize(s, p, n, st);
+            }
+        };
+        StubProvider edge = new StubProvider(TtsProviderName.EDGE, true, Long.MAX_VALUE);
+        TtsService svc = service(emptyLexicon(), new RecordingUsage(), eleven, edge);
+        List<Long> sent = new ArrayList<>();
+
+        var script = VoiceFixtures.script(VoiceFixtures.title("s01", "Câu một. Câu hai. Câu ba."));
+        assertThatThrownBy(() -> svc.voice(script, root.resolve("work/j1"), VoiceFixtures.settings(), null, sent::add))
+                .isInstanceOf(TtsTransientException.class);
+
+        assertThat(sent).containsExactly(8L, 8L); // 2 câu trước câu lỗi đã gửi (đã bị tính tiền)
+    }
+
+    @Test
+    void quotaFallbackCountsCharsOfBothProviders() {
+        StubProvider eleven = new StubProvider(TtsProviderName.ELEVENLABS, true, 1_000_000) {
+            @Override
+            public byte[] synthesize(String s, String p, String n, VoiceSettings st) {
+                if (s.startsWith("Câu hai")) {
+                    throw new TtsQuotaExceededException("hết");
+                }
+                return super.synthesize(s, p, n, st);
+            }
+        };
+        StubProvider edge = new StubProvider(TtsProviderName.EDGE, true, Long.MAX_VALUE);
+        TtsService svc = service(emptyLexicon(), new RecordingUsage(), eleven, edge);
+        List<Long> sent = new ArrayList<>();
+
+        VoiceResult result = svc.voice(
+                VoiceFixtures.script(VoiceFixtures.title("s01", "Câu một. Câu hai.")),
+                root.resolve("work/j1"),
+                VoiceFixtures.settings(),
+                null,
+                sent::add);
+
+        assertThat(result.provider()).isEqualTo(TtsProviderName.EDGE);
+        // ElevenLabs: "Câu một." (8) trước khi hết quota; edge đọc lại cả 2 câu (8 + 8)
+        assertThat(sent).containsExactly(8L, 8L, 8L);
+        assertThat(result.ttsChars()).isEqualTo(24);
+    }
+
+    @Test
     void quotaFailureOnFallbackIsRethrown() {
         TtsProvider quota = new StubProvider(TtsProviderName.EDGE, true, Long.MAX_VALUE) {
             @Override

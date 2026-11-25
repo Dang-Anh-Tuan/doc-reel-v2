@@ -65,6 +65,14 @@ describe("CostPanel", () => {
     expect(f["Nhận → hiện tại"]).toBe("25 phút");
   });
 
+  it("ghi chú theo provider: edge miễn phí, không nói 'gửi ElevenLabs'", () => {
+    const edge = render(<CostPanel cost={{ ...COST, ttsProvider: "EDGE", estimatedUsd: 0, estimatedCredits: 0 }} done />);
+    expect(edge.textContent).toContain("edge-tts miễn phí");
+    expect(edge.textContent).not.toContain("gửi ElevenLabs");
+    const eleven = render(<CostPanel cost={COST} done />);
+    expect(eleven.textContent).toContain("ký tự thực gửi ELEVENLABS");
+  });
+
   it("server cũ không có cost → thông báo", () => {
     const el = render(<CostPanel cost={undefined} done />);
     expect(el.textContent).toContain("Chưa có dữ liệu chi phí");
@@ -91,5 +99,10 @@ describe("CostPanel", () => {
     ).toBe(1500);
     expect(remainingVideos(25_800, 1200)).toBe(21);
     expect(remainingVideos(0, 1200)).toBe(0);
+    // credit / ký tự: Flash v2.5 = 0,5 → gấp đôi số video
+    expect(remainingVideos(25_800, 1200, 0.5)).toBe(43);
+    expect(remainingVideos(25_800, 1200, 0)).toBe(21); // giá trị hỏng → 1
+    // job edge-tts không vào trung bình
+    expect(averageCharsPerVideo([{ state: "UPLOADED", ttsChars: 5000, ttsProvider: "EDGE" }])).toBe(1200);
   });
 });

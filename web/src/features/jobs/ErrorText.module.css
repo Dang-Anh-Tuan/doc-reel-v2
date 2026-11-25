@@ -59,3 +59,7 @@
 .box[data-open="true"] .full {
   margin-top: 6px;
 }
+
+.full[hidden] {
+  display: none;
+}

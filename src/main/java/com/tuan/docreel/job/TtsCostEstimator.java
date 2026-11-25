@@ -28,6 +28,11 @@ public class TtsCostEstimator {
         this.usdPerCredit = usdPerCredit;
     }
 
+    /** Credit ElevenLabs cho mỗi ký tự (cấu hình). */
+    public double creditsPerChar() {
+        return creditsPerChar;
+    }
+
     /** Credit ước tính (2 chữ số thập phân); edge / không có ký tự → 0. */
     public double credits(String provider, long chars) {
         if (isFree(provider) || chars <= 0) {

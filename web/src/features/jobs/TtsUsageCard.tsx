@@ -7,7 +7,7 @@ interface TtsUsageCardProps {
   /** null = đang tải lần đầu (hoặc lỗi mạng tới server). */
   usage: TtsUsage | null;
   /** Job gần đây (mới nhất trước) để lấy trung bình ký tự / video. */
-  recentJobs: ReadonlyArray<{ state: string; ttsChars?: number }>;
+  recentJobs: ReadonlyArray<{ state: string; ttsChars?: number; ttsProvider?: string | null }>;
   className?: string;
 }
 
@@ -34,6 +34,7 @@ function UsageBody({ usage, recentJobs }: Omit<TtsUsageCardProps, "className">) 
   const percent = limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 100;
   const tone = percent >= 95 ? "bad" : percent >= 80 ? "warn" : "ok";
   const avg = averageCharsPerVideo(recentJobs);
+  const rate = usage.creditsPerChar ?? 1;
 
   return (
     <div className={styles.usage}>
@@ -56,9 +57,11 @@ function UsageBody({ usage, recentJobs }: Omit<TtsUsageCardProps, "className">) 
       </div>
       <p className={styles.usageLine}>
         <span>
-          Còn {formatNumber(remaining)} credit ≈ {formatNumber(remainingVideos(remaining, avg))} video
+          Còn {formatNumber(remaining)} credit ≈ {formatNumber(remainingVideos(remaining, avg, rate))} video
         </span>
-        <span className={styles.muted}>TB {formatNumber(avg)} ký tự / video</span>
+        <span className={styles.muted}>
+          TB {formatNumber(avg)} ký tự × {formatNumber(rate, 2)} credit / ký tự
+        </span>
       </p>
       {usage.resetAt && <p className={styles.note}>Đặt lại quota: {formatTime(usage.resetAt)}</p>}
     </div>

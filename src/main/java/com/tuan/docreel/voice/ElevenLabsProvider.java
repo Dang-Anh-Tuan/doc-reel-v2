@@ -23,6 +23,8 @@ public class ElevenLabsProvider implements TtsProvider {
 
     private static final JsonMapper MAPPER = JsonMapper.builder().build();
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(60);
+    /** Đọc quota là lời gọi nhỏ, có thể chạy trên thread HTTP ({@code /api/tts/usage}) → không chờ lâu như TTS. */
+    static final Duration SUBSCRIPTION_TIMEOUT = Duration.ofSeconds(5);
 
     private final AppProperties.ElevenLabs config;
     private final HttpClient http =
@@ -63,7 +65,7 @@ public class ElevenLabsProvider implements TtsProvider {
     /** Gọi ElevenLabs; lỗi HTTP/mạng ném {@link TtsException} (message không chứa key). */
     public Subscription subscription() {
         HttpResponse<byte[]> response =
-                send(HttpRequest.newBuilder(url("/v1/user/subscription")).GET());
+                send(HttpRequest.newBuilder(url("/v1/user/subscription")).GET(), SUBSCRIPTION_TIMEOUT);
         if (response.statusCode() != 200) {
             throw failure(response);
         }
@@ -98,7 +100,7 @@ public class ElevenLabsProvider implements TtsProvider {
                 .header("Content-Type", "application/json")
                 .header("Accept", "audio/mpeg")
                 .POST(HttpRequest.BodyPublishers.ofString(MAPPER.writeValueAsString(body), StandardCharsets.UTF_8));
-        HttpResponse<byte[]> response = send(request);
+        HttpResponse<byte[]> response = send(request, REQUEST_TIMEOUT);
         if (response.statusCode() != 200) {
             throw failure(response);
         }
@@ -113,10 +115,9 @@ public class ElevenLabsProvider implements TtsProvider {
         return URI.create(base.endsWith("/") ? base.substring(0, base.length() - 1) + path : base + path);
     }
 
-    private HttpResponse<byte[]> send(HttpRequest.Builder builder) {
-        HttpRequest request = builder.header("xi-api-key", config.apiKey())
-                .timeout(REQUEST_TIMEOUT)
-                .build();
+    private HttpResponse<byte[]> send(HttpRequest.Builder builder, Duration timeout) {
+        HttpRequest request =
+                builder.header("xi-api-key", config.apiKey()).timeout(timeout).build();
         try {
             return http.send(request, HttpResponse.BodyHandlers.ofByteArray());
         } catch (IOException e) {

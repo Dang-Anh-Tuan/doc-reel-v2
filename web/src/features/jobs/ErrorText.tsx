@@ -41,11 +41,10 @@ export function ErrorText({ text, className }: ErrorTextProps) {
           {open ? "Thu gọn" : "Xem chi tiết"}
         </button>
       </div>
-      {open && (
-        <pre id={id} className={styles.full}>
-          {text}
-        </pre>
-      )}
+      {/* Luôn có trong DOM để aria-controls trỏ đúng phần tử; thu gọn = hidden */}
+      <pre id={id} className={styles.full} hidden={!open}>
+        {text}
+      </pre>
     </div>
   );
 }

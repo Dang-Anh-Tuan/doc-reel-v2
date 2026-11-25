@@ -5,6 +5,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -13,11 +14,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import com.tuan.docreel.job.TtsCostEstimator;
 import java.net.URI;
 import java.nio.file.Path;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,6 +60,8 @@ class TtsUsageControllerTest {
         }
     }
 
+    TtsUsageService service;
+
     private MockMvc mvc(String apiKey) {
         var props = VoiceFixtures.props(root, URI.create(wm.baseUrl()), apiKey, "edge-tts", 0);
         Clock clock = new Clock() {
@@ -69,7 +80,7 @@ class TtsUsageControllerTest {
                 return now.get();
             }
         };
-        var service = new TtsUsageService(new ElevenLabsProvider(props), clock);
+        service = new TtsUsageService(new ElevenLabsProvider(props), new TtsCostEstimator(0.5, 0.0002), clock);
         return MockMvcBuilders.standaloneSetup(new TtsUsageController(service)).build();
     }
 
@@ -97,6 +108,7 @@ class TtsUsageControllerTest {
                 .andExpect(jsonPath("$.limit").value(30000))
                 .andExpect(jsonPath("$.remaining").value(25800))
                 .andExpect(jsonPath("$.resetAt").value("2026-01-01T00:00:00Z"))
+                .andExpect(jsonPath("$.creditsPerChar").value(0.5))
                 .andExpect(content().string(not(containsString(KEY))));
 
         // trong 60 s: dùng cache, không gọi lại ElevenLabs
@@ -109,6 +121,45 @@ class TtsUsageControllerTest {
         now.set(now.get().plusSeconds(2));
         mvc.perform(MockMvcRequestBuilders.get("/api/tts/usage")).andExpect(status().isOk());
         wm.verify(2, getRequestedFor(urlPathEqualTo("/v1/user/subscription")));
+    }
+
+    @Test
+    void concurrentRequestsWhenCacheExpiredMakeOneOutboundCall() throws Exception {
+        wm.stubFor(get(urlPathEqualTo("/v1/user/subscription"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withFixedDelay(300)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"character_count\":1,\"character_limit\":10}")));
+        mvc(KEY);
+        ExecutorService pool = Executors.newFixedThreadPool(8);
+        try {
+            List<Future<TtsUsageView>> futures = new ArrayList<>();
+            for (int i = 0; i < 8; i++) {
+                futures.add(pool.submit(service::usage));
+            }
+            for (Future<TtsUsageView> f : futures) {
+                assertThat(f.get(10, TimeUnit.SECONDS).used()).isEqualTo(1L);
+            }
+        } finally {
+            pool.shutdownNow();
+        }
+        wm.verify(1, getRequestedFor(urlPathEqualTo("/v1/user/subscription")));
+    }
+
+    @Test
+    void slowSubscriptionTimesOutQuicklyAsUnavailable() {
+        wm.stubFor(get(urlPathEqualTo("/v1/user/subscription"))
+                .willReturn(aResponse().withStatus(200).withFixedDelay(8_000).withBody("{}")));
+        mvc(KEY);
+
+        long start = System.nanoTime();
+        TtsUsageView view = service.usage();
+        Duration took = Duration.ofNanos(System.nanoTime() - start);
+
+        assertThat(view.available()).isFalse();
+        assertThat(took).isLessThan(Duration.ofSeconds(7)); // timeout riêng 5 s, không phải 60 s của TTS
+        assertThat(ElevenLabsProvider.SUBSCRIPTION_TIMEOUT).isEqualTo(Duration.ofSeconds(5));
     }
 
     @Test

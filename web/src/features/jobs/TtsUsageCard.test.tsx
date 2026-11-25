@@ -33,6 +33,17 @@ describe("TtsUsageCard", () => {
     expect(el.textContent).toContain("≈ 20 video"); // 25800 / 1290
   });
 
+  it("tính theo credit / ký tự từ server", () => {
+    const el = render(
+      <TtsUsageCard
+        usage={{ available: true, provider: "ELEVENLABS", used: 4200, limit: 30000, remaining: 25800, creditsPerChar: 0.5 }}
+        recentJobs={[{ state: "UPLOADED", ttsChars: 1290, ttsProvider: "ELEVENLABS" }]}
+      />,
+    );
+    expect(el.textContent).toContain("≈ 40 video"); // 25800 / (1290 × 0,5)
+    expect(el.textContent).toContain("0,5 credit / ký tự");
+  });
+
   it("chưa có job UPLOADED → dùng 1.200 ký tự / video", () => {
     const el = render(
       <TtsUsageCard

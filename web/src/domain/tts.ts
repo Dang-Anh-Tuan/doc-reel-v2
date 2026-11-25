@@ -11,6 +11,8 @@ export interface TtsUsage {
   /** ISO-8601; lúc quota được đặt lại. */
   resetAt?: string;
   reason?: string;
+  /** Đơn giá cấu hình (credit / ký tự) — đổi "ký tự TB / video" sang credit; thiếu (server cũ) → 1. */
+  creditsPerChar?: number;
 }
 
 export const TTS_USAGE_PATH = "/api/tts/usage";
